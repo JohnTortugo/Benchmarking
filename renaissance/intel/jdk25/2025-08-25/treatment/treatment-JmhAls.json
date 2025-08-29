@@ -1,0 +1,120 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.apache.spark.JmhAls.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/graalvm-community-openjdk-25+25.1/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCI",
+            "-XX:+UseJVMCICompiler",
+            "-XX:+UseJVMCINativeLibrary",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "25",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25+25-jvmci-b01",
+        "warmupIterations" : 30,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 8,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 1280.1792377999998,
+            "scoreError" : 12.613346193435262,
+            "scoreConfidence" : [
+                1267.5658916065645,
+                1292.792583993435
+            ],
+            "scorePercentiles" : {
+                "0.0" : 1246.754103,
+                "50.0" : 1279.27962,
+                "90.0" : 1313.7167273999999,
+                "95.0" : 1318.6870025,
+                "99.0" : 1334.879143,
+                "99.9" : 1334.879143,
+                "99.99" : 1334.879143,
+                "99.999" : 1334.879143,
+                "99.9999" : 1334.879143,
+                "100.0" : 1334.879143
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    1264.791856,
+                    1313.869088,
+                    1276.977389,
+                    1279.156405,
+                    1296.744517,
+                    1249.969535,
+                    1246.754103,
+                    1293.75035
+                ],
+                [
+                    1312.057137,
+                    1318.747755,
+                    1268.550185,
+                    1286.421147,
+                    1317.532705,
+                    1257.030184,
+                    1259.143867,
+                    1286.240778
+                ],
+                [
+                    1282.709694,
+                    1289.179179,
+                    1334.879143,
+                    1297.07113,
+                    1300.796123,
+                    1301.303139,
+                    1284.071121,
+                    1268.859955
+                ],
+                [
+                    1262.050607,
+                    1294.067374,
+                    1268.626673,
+                    1273.568949,
+                    1312.345482,
+                    1262.150496,
+                    1255.131377,
+                    1274.963905
+                ],
+                [
+                    1248.482875,
+                    1283.287923,
+                    1251.012649,
+                    1255.442903,
+                    1279.402835,
+                    1284.483024,
+                    1252.689983,
+                    1262.855972
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

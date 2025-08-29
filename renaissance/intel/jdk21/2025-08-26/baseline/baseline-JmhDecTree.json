@@ -1,0 +1,128 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.apache.spark.JmhDecTree.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java",
+        "jvmArgs" : [
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:-EnableJVMCI",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 40,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 11,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 697.9600176363637,
+            "scoreError" : 5.973476157114325,
+            "scoreConfidence" : [
+                691.9865414792494,
+                703.933493793478
+            ],
+            "scorePercentiles" : {
+                "0.0" : 673.389957,
+                "50.0" : 697.308784,
+                "90.0" : 715.3892062,
+                "95.0" : 720.1823392,
+                "99.0" : 733.995429,
+                "99.9" : 733.995429,
+                "99.99" : 733.995429,
+                "99.999" : 733.995429,
+                "99.9999" : 733.995429,
+                "100.0" : 733.995429
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    693.449327,
+                    697.308784,
+                    717.673878,
+                    696.564448,
+                    690.028889,
+                    710.217051,
+                    693.199571,
+                    692.34332,
+                    691.915467,
+                    695.041444,
+                    690.11459
+                ],
+                [
+                    713.569225,
+                    721.126948,
+                    733.995429,
+                    707.92784,
+                    716.882638,
+                    709.397512,
+                    704.695054,
+                    714.393585,
+                    707.016547,
+                    705.489779,
+                    711.160465
+                ],
+                [
+                    680.409367,
+                    682.890428,
+                    707.628937,
+                    683.01994,
+                    673.389957,
+                    682.644401,
+                    681.975175,
+                    677.25884,
+                    679.879354,
+                    684.602579,
+                    679.976206
+                ],
+                [
+                    704.096295,
+                    702.57488,
+                    719.946187,
+                    702.686622,
+                    698.106948,
+                    703.613654,
+                    704.015962,
+                    702.073558,
+                    699.047439,
+                    699.651023,
+                    692.884288
+                ],
+                [
+                    698.68371,
+                    693.457766,
+                    713.306797,
+                    697.42102,
+                    690.736212,
+                    694.768597,
+                    689.261026,
+                    689.797129,
+                    683.690634,
+                    692.363601,
+                    688.430647
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

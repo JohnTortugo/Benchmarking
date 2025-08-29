@@ -1,0 +1,119 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.jdk.concurrent.JmhFjKmeans.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/graalvm-ce-ristretto-21/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCI",
+            "-XX:+UseJVMCICompiler",
+            "-XX:+UseJVMCINativeLibrary",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 30,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 8,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 1255.9293153500003,
+            "scoreError" : 6.837010323964717,
+            "scoreConfidence" : [
+                1249.0923050260355,
+                1262.766325673965
+            ],
+            "scorePercentiles" : {
+                "0.0" : 1241.205924,
+                "50.0" : 1253.0267454999998,
+                "90.0" : 1279.7866892,
+                "95.0" : 1282.11366565,
+                "99.0" : 1282.160377,
+                "99.9" : 1282.160377,
+                "99.99" : 1282.160377,
+                "99.999" : 1282.160377,
+                "99.9999" : 1282.160377,
+                "100.0" : 1282.160377
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    1245.275988,
+                    1248.568324,
+                    1249.836557,
+                    1241.205924,
+                    1246.674945,
+                    1257.232278,
+                    1249.281872,
+                    1253.227635
+                ],
+                [
+                    1251.191744,
+                    1246.741479,
+                    1259.736486,
+                    1253.127875,
+                    1253.485993,
+                    1257.18425,
+                    1258.298308,
+                    1253.302239
+                ],
+                [
+                    1251.697391,
+                    1248.326692,
+                    1244.911972,
+                    1249.353739,
+                    1251.380112,
+                    1243.324619,
+                    1245.938559,
+                    1254.807128
+                ],
+                [
+                    1245.68249,
+                    1242.175219,
+                    1260.709397,
+                    1252.925616,
+                    1242.408295,
+                    1255.533774,
+                    1256.271083,
+                    1246.391117
+                ],
+                [
+                    1281.591577,
+                    1274.141855,
+                    1282.141144,
+                    1279.89914,
+                    1269.491328,
+                    1278.774632,
+                    1282.160377,
+                    1272.763461
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

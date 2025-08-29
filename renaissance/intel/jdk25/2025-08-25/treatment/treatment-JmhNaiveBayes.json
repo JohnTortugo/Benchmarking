@@ -1,0 +1,120 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.apache.spark.JmhNaiveBayes.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/graalvm-community-openjdk-25+25.1/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCI",
+            "-XX:+UseJVMCICompiler",
+            "-XX:+UseJVMCINativeLibrary",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "25",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25+25-jvmci-b01",
+        "warmupIterations" : 30,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 8,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 440.35573957500003,
+            "scoreError" : 15.095995661546153,
+            "scoreConfidence" : [
+                425.25974391345386,
+                455.4517352365462
+            ],
+            "scorePercentiles" : {
+                "0.0" : 391.320179,
+                "50.0" : 436.99638949999996,
+                "90.0" : 473.45558439999996,
+                "95.0" : 491.50080714999996,
+                "99.0" : 497.107659,
+                "99.9" : 497.107659,
+                "99.99" : 497.107659,
+                "99.999" : 497.107659,
+                "99.9999" : 497.107659,
+                "100.0" : 497.107659
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    439.665075,
+                    444.443748,
+                    429.606897,
+                    468.177233,
+                    492.016071,
+                    414.054947,
+                    469.647113,
+                    444.325083
+                ],
+                [
+                    424.101905,
+                    424.873995,
+                    457.748809,
+                    497.107659,
+                    472.739854,
+                    481.710794,
+                    429.513484,
+                    452.537385
+                ],
+                [
+                    391.320179,
+                    430.011426,
+                    419.760483,
+                    463.68376,
+                    428.511909,
+                    424.045559,
+                    467.092004,
+                    434.327704
+                ],
+                [
+                    452.142991,
+                    417.657189,
+                    417.68563,
+                    458.218991,
+                    408.607796,
+                    406.891453,
+                    443.717932,
+                    455.805321
+                ],
+                [
+                    392.587144,
+                    418.66486,
+                    426.819645,
+                    473.53511,
+                    403.719934,
+                    411.315595,
+                    471.437107,
+                    454.399809
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

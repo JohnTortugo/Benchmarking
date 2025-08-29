@@ -1,0 +1,128 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.apache.spark.JmhGaussMix.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java",
+        "jvmArgs" : [
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:-EnableJVMCI",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 40,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 11,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 5110.907990472726,
+            "scoreError" : 30.308833880698774,
+            "scoreConfidence" : [
+                5080.599156592028,
+                5141.216824353424
+            ],
+            "scorePercentiles" : {
+                "0.0" : 5015.867975,
+                "50.0" : 5088.973383,
+                "90.0" : 5206.2291508,
+                "95.0" : 5212.606650799999,
+                "99.0" : 5231.361641,
+                "99.9" : 5231.361641,
+                "99.99" : 5231.361641,
+                "99.999" : 5231.361641,
+                "99.9999" : 5231.361641,
+                "100.0" : 5231.361641
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    5203.863724,
+                    5202.479107,
+                    5208.199612,
+                    5210.841737,
+                    5203.24139,
+                    5231.361641,
+                    5202.665613,
+                    5210.761326,
+                    5194.275991,
+                    5204.91551,
+                    5219.666306
+                ],
+                [
+                    5098.641373,
+                    5102.458696,
+                    5097.988154,
+                    5107.165642,
+                    5088.973383,
+                    5084.143837,
+                    5069.272735,
+                    5076.943347,
+                    5087.478026,
+                    5076.953721,
+                    5078.512078
+                ],
+                [
+                    5033.285804,
+                    5015.867975,
+                    5041.040329,
+                    5021.313943,
+                    5028.236441,
+                    5052.989935,
+                    5042.920866,
+                    5044.860211,
+                    5027.451728,
+                    5016.313654,
+                    5029.992869
+                ],
+                [
+                    5157.260765,
+                    5140.932395,
+                    5176.76911,
+                    5160.598659,
+                    5158.295329,
+                    5157.946568,
+                    5145.408928,
+                    5157.22788,
+                    5144.897205,
+                    5147.266772,
+                    5169.150978
+                ],
+                [
+                    5075.606807,
+                    5061.070117,
+                    5091.688055,
+                    5074.05047,
+                    5076.502227,
+                    5071.849161,
+                    5058.008793,
+                    5065.944523,
+                    5063.548757,
+                    5061.061999,
+                    5069.777274
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

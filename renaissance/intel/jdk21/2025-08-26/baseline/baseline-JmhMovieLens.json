@@ -1,0 +1,103 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.apache.spark.JmhMovieLens.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java",
+        "jvmArgs" : [
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:-EnableJVMCI",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 20,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 6,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 8123.256749766667,
+            "scoreError" : 135.45830810762922,
+            "scoreConfidence" : [
+                7987.798441659038,
+                8258.715057874297
+            ],
+            "scorePercentiles" : {
+                "0.0" : 7943.014142,
+                "50.0" : 8068.4281665,
+                "90.0" : 8246.6002627,
+                "95.0" : 8614.743279249999,
+                "99.0" : 9040.401955,
+                "99.9" : 9040.401955,
+                "99.99" : 9040.401955,
+                "99.999" : 9040.401955,
+                "99.9999" : 9040.401955,
+                "100.0" : 9040.401955
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    8079.501929,
+                    8000.388741,
+                    8018.49582,
+                    8055.800278,
+                    8007.797765,
+                    7980.354173
+                ],
+                [
+                    7960.906742,
+                    7961.961845,
+                    7943.014142,
+                    8003.725161,
+                    8010.272507,
+                    7992.785865
+                ],
+                [
+                    8248.049985,
+                    8266.47709,
+                    8204.240613,
+                    8168.348371,
+                    8233.552762,
+                    8227.063174
+                ],
+                [
+                    8057.354404,
+                    8082.915479,
+                    9040.401955,
+                    7992.242967,
+                    8032.151952,
+                    7967.183995
+                ],
+                [
+                    8207.991973,
+                    8181.167904,
+                    8185.422012,
+                    8179.443329,
+                    8232.570566,
+                    8176.118994
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

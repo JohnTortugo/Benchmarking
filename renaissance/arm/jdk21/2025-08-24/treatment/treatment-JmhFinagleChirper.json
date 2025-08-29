@@ -1,0 +1,94 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.twitter.finagle.JmhFinagleChirper.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/wf/tools/graalvm-ce-ristretto-21/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCI",
+            "-XX:+UseJVMCICompiler",
+            "-XX:+UseJVMCINativeLibrary",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 8,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 23,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 142398.10859030436,
+            "scoreError" : 2412.621814521999,
+            "scoreConfidence" : [
+                139985.48677578237,
+                144810.73040482635
+            ],
+            "scorePercentiles" : {
+                "0.0" : 138213.079952,
+                "50.0" : 141593.19845,
+                "90.0" : 147042.1495618,
+                "95.0" : 147925.4943038,
+                "99.0" : 148081.979024,
+                "99.9" : 148081.979024,
+                "99.99" : 148081.979024,
+                "99.999" : 148081.979024,
+                "99.9999" : 148081.979024,
+                "100.0" : 148081.979024
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    148081.979024,
+                    146656.04077,
+                    145742.789835,
+                    145903.792036,
+                    145851.698858,
+                    145402.149544,
+                    142508.956796,
+                    142866.905552,
+                    143338.750982,
+                    141037.940691,
+                    140840.457141,
+                    140380.561958,
+                    141822.429888,
+                    140052.895767,
+                    140993.794524,
+                    140724.10175,
+                    139312.404026,
+                    139166.025236,
+                    138428.549983,
+                    138938.439391,
+                    147299.555423,
+                    141593.19845,
+                    138213.079952
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

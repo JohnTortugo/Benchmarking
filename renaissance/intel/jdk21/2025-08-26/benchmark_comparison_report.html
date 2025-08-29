@@ -1,0 +1,1247 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JMH Benchmark Comparison Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .summary h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        
+        th:hover {
+            background-color: #e9ecef;
+        }
+        
+        th.sorted-asc::after {
+            content: ' ↑';
+            position: absolute;
+            right: 8px;
+        }
+        
+        th.sorted-desc::after {
+            content: ' ↓';
+            position: absolute;
+            right: 8px;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr {
+            cursor: pointer;
+        }
+        
+        tbody tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border: none;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .modal-title {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .detail-section h3 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .detail-value {
+            color: #6c757d;
+            font-family: monospace;
+        }
+        
+        .comparison-section {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-section h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .metric-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .metric-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: white;
+            border: 1px solid #dee2e6;
+        }
+        
+        .metric-arrow {
+            font-size: 24px;
+            color: #6c757d;
+        }
+        
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-error {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .secondary-metrics {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .secondary-metrics h4 {
+            color: #0c5460;
+            margin-top: 0;
+        }
+        
+        .jvm-args {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .significance-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .significance-yes {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .significance-no {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-improved {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .status-regressed {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .status-unchanged {
+            color: #6c757d;
+        }
+        
+        .number {
+            text-align: right;
+        }
+        
+        .filtered-stats {
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .benchmark-name {
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JMH Benchmark Comparison Report</h1>
+        <p style="text-align: center; color: #6c757d;">Generated on 2025-08-28 17:19:02</p>
+        
+        <div class="summary">
+            <h2 id="summaryTitle">Summary Statistics</h2>
+            <div class="stats-grid" id="summaryStats">
+                <div class="stat-card">
+                    <div class="stat-value">25</div>
+                    <div class="stat-label">Total Benchmarks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Improved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">19</div>
+                    <div class="stat-label">Regressed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0.93x</div>
+                    <div class="stat-label">Avg Speedup</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h3>Filters and Controls</h3>
+            <input type="text" id="benchmarkFilter" placeholder="Filter by benchmark name..." onkeyup="filterTable()">
+            <select id="statusFilter" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="improved">Improved</option>
+                <option value="regressed">Regressed</option>
+                <option value="unchanged">Unchanged</option>
+            </select>
+            <select id="modeFilter" onchange="filterTable()">
+                <option value="">All Modes</option>
+                <option value="thrpt">Throughput</option>
+                <option value="avgt">Average Time</option>
+                <option value="sample">Sample Time</option>
+                <option value="ss">Single Shot</option>
+            </select>
+            <select id="significanceFilter" onchange="filterTable()">
+                <option value="">All Significance</option>
+                <option value="significant">Statistically Significant</option>
+                <option value="not_significant">Not Significant</option>
+            </select>
+            <button onclick="resetFilters()">Reset Filters</button>
+            <button onclick="exportFilteredData()">Export Filtered Data</button>
+            <button onclick="showBarChart()">Show Bar Chart</button>
+            
+            <div class="filtered-stats" id="filteredStats"></div>
+        </div>
+        
+        <table id="benchmarkTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Benchmark</th>
+                    <th onclick="sortTable(1)">Mode</th>
+                    <th onclick="sortTable(2)">Baseline Score</th>
+                    <th onclick="sortTable(3)">Treatment Score</th>
+                    <th onclick="sortTable(4)">Unit</th>
+                    <th onclick="sortTable(5)">Speedup</th>
+                    <th onclick="sortTable(6)">Statistical Significance</th>
+                </tr>
+            </thead>
+            <tbody id="benchmarkTableBody">
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.actors.JmhAkkaUct.run">actors.JmhAkkaUct</td>
+                    <td>ss</td>
+                    <td class="number">948.7579 ± 48.3497</td>
+                    <td class="number">1055.8250 ± 34.7707</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.90x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhMovieLens.run">apache.spark.JmhMovieLens</td>
+                    <td>ss</td>
+                    <td class="number">8123.2567 ± 135.4583</td>
+                    <td class="number">8012.0834 ± 48.6437</td>
+                    <td>ms/op</td>
+                    <td class="number status-improved">1.01x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhChiSquare.run">apache.spark.JmhChiSquare</td>
+                    <td>ss</td>
+                    <td class="number">448.5707 ± 4.8977</td>
+                    <td class="number">622.0462 ± 21.9957</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.72x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhDecTree.run">apache.spark.JmhDecTree</td>
+                    <td>ss</td>
+                    <td class="number">697.9600 ± 5.9735</td>
+                    <td class="number">705.5847 ± 6.2660</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.99x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.scala.sat.JmhScalaDoku.run">scala.sat.JmhScalaDoku</td>
+                    <td>ss</td>
+                    <td class="number">3371.7093 ± 975.3605</td>
+                    <td class="number">3007.5967 ± 110.6120</td>
+                    <td>ms/op</td>
+                    <td class="number status-improved">1.12x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.scala.dotty.JmhDotty.run">scala.dotty.JmhDotty</td>
+                    <td>ss</td>
+                    <td class="number">858.2226 ± 2.4905</td>
+                    <td class="number">833.4220 ± 28.4540</td>
+                    <td>ms/op</td>
+                    <td class="number status-improved">1.03x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhPageRank.run">apache.spark.JmhPageRank</td>
+                    <td>ss</td>
+                    <td class="number">2980.7208 ± 82.3479</td>
+                    <td class="number">3165.4783 ± 65.1382</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.94x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.jdk.streams.JmhParMnemonics.run">jdk.streams.JmhParMnemonics</td>
+                    <td>ss</td>
+                    <td class="number">2821.9286 ± 35.3191</td>
+                    <td class="number">4122.1593 ± 145.5506</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.68x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhGaussMix.run">apache.spark.JmhGaussMix</td>
+                    <td>ss</td>
+                    <td class="number">5110.9080 ± 30.3088</td>
+                    <td class="number">4863.5572 ± 46.0860</td>
+                    <td>ms/op</td>
+                    <td class="number status-improved">1.05x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhLogRegression.run">apache.spark.JmhLogRegression</td>
+                    <td>ss</td>
+                    <td class="number">732.4007 ± 22.2917</td>
+                    <td class="number">738.1488 ± 15.0473</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.99x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.jdk.streams.JmhMnemonics.run">jdk.streams.JmhMnemonics</td>
+                    <td>ss</td>
+                    <td class="number">3348.7896 ± 55.0630</td>
+                    <td class="number">4284.3596 ± 123.5541</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.78x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhNaiveBayes.run">apache.spark.JmhNaiveBayes</td>
+                    <td>ss</td>
+                    <td class="number">394.3855 ± 11.2519</td>
+                    <td class="number">438.4185 ± 11.9324</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.90x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.database.JmhDbShootout.run">database.JmhDbShootout</td>
+                    <td>ss</td>
+                    <td class="number">3840.7783 ± 193.7940</td>
+                    <td class="number">3936.4542 ± 60.4056</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.98x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.scala.stm.JmhPhilosophers.run">scala.stm.JmhPhilosophers</td>
+                    <td>ss</td>
+                    <td class="number">4218.9344 ± 111.5810</td>
+                    <td class="number">4330.6439 ± 113.1169</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.97x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.jdk.concurrent.JmhFjKmeans.run">jdk.concurrent.JmhFjKmeans</td>
+                    <td>ss</td>
+                    <td class="number">1211.4243 ± 8.7503</td>
+                    <td class="number">1255.9293 ± 6.8370</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.96x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.twitter.finagle.JmhFinagleHttp.run">twitter.finagle.JmhFinagleHttp</td>
+                    <td>ss</td>
+                    <td class="number">5100.9937 ± 44.7946</td>
+                    <td class="number">5106.1446 ± 111.4879</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">1.00x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.jdk.streams.JmhScrabble.run">jdk.streams.JmhScrabble</td>
+                    <td>ss</td>
+                    <td class="number">67.0755 ± 2.0482</td>
+                    <td class="number">116.4708 ± 4.3180</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.58x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.rx.JmhRxScrabble.run">rx.JmhRxScrabble</td>
+                    <td>ss</td>
+                    <td class="number">146.9942 ± 6.0072</td>
+                    <td class="number">149.0107 ± 8.2870</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.99x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.jdk.concurrent.JmhFutureGenetic.run">jdk.concurrent.JmhFutureGenetic</td>
+                    <td>ss</td>
+                    <td class="number">2232.4783 ± 10.8653</td>
+                    <td class="number">1998.6136 ± 18.1066</td>
+                    <td>ms/op</td>
+                    <td class="number status-improved">1.12x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.apache.spark.JmhAls.run">apache.spark.JmhAls</td>
+                    <td>ss</td>
+                    <td class="number">1529.6982 ± 17.5542</td>
+                    <td class="number">1368.5310 ± 20.5897</td>
+                    <td>ms/op</td>
+                    <td class="number status-improved">1.12x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.scala.stm.JmhScalaStmBench7.run">scala.stm.JmhScalaStmBench7</td>
+                    <td>ss</td>
+                    <td class="number">1023.5347 ± 26.0122</td>
+                    <td class="number">1108.5633 ± 21.7565</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.92x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.twitter.finagle.JmhFinagleChirper.run">twitter.finagle.JmhFinagleChirper</td>
+                    <td>ss</td>
+                    <td class="number">4283.1778 ± 60.5549</td>
+                    <td class="number">4481.9240 ± 76.8727</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.96x</td>
+                    <td>No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.scala.stdlib.JmhScalaKmeans.run">scala.stdlib.JmhScalaKmeans</td>
+                    <td>ss</td>
+                    <td class="number">205.6907 ± 20.2928</td>
+                    <td class="number">301.5954 ± 8.9381</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.68x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.neo4j.JmhNeo4jAnalytics.run">neo4j.JmhNeo4jAnalytics</td>
+                    <td>ss</td>
+                    <td class="number">1366.9018 ± 28.9363</td>
+                    <td class="number">1551.3190 ± 32.9307</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.88x</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="org.renaissance.actors.JmhReactors.run">actors.JmhReactors</td>
+                    <td>ss</td>
+                    <td class="number">10740.6295 ± 1085.6318</td>
+                    <td class="number">11025.6821 ± 511.7821</td>
+                    <td>ms/op</td>
+                    <td class="number status-regressed">0.97x</td>
+                    <td>No</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Benchmark Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody">
+                <!-- Content will be dynamically populated -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Modal -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Benchmark Speedup Chart</h2>
+                <span class="close" onclick="closeChartModal()">&times;</span>
+            </div>
+            <div style="height: 400px; position: relative;">
+                <canvas id="benchmarkChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let originalData = [{"benchmark": "org.renaissance.actors.JmhAkkaUct.run", "mode": "ss", "threads": 1, "baseline_score": 948.7579404571428, "baseline_error": 48.34968031260868, "treatment_score": 1055.8250277142859, "treatment_error": 34.77070400334068, "unit": "ms/op", "improvement_percent": -11.284974037271782, "speedup": 0.8985939104996133, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 1.797811532123477}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 24, "warmup_time": "single-shot", "measurement_iterations": 7, "measurement_time": "single-shot", "score_confidence": [900.4082601445341, 997.1076207697515], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 24, "warmup_time": "single-shot", "measurement_iterations": 7, "measurement_time": "single-shot", "score_confidence": [1021.0543237109451, 1090.5957317176264], "secondary_metrics": {}, "params": {}}, "display_name": "actors.JmhAkkaUct"}, {"benchmark": "org.renaissance.apache.spark.JmhMovieLens.run", "mode": "ss", "threads": 1, "baseline_score": 8123.256749766667, "baseline_error": 135.45830810762922, "treatment_score": 8012.083394900002, "treatment_error": 48.643688804780936, "unit": "ms/op", "improvement_percent": 1.3685810788863544, "speedup": 1.013875711146171, "status": "improved", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.7724254022691931}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [7987.798441659038, 8258.715057874297], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [7963.439706095221, 8060.727083704783], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhMovieLens"}, {"benchmark": "org.renaissance.apache.spark.JmhChiSquare.run", "mode": "ss", "threads": 1, "baseline_score": 448.5706897000001, "baseline_error": 4.897668931715519, "treatment_score": 622.0462340624999, "treatment_error": 21.99574827544557, "unit": "ms/op", "improvement_percent": -38.67295575609691, "speedup": 0.7211211404182057, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 7.698247446142379}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 60, "warmup_time": "single-shot", "measurement_iterations": 16, "measurement_time": "single-shot", "score_confidence": [443.6730207682846, 453.46835863171566], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 60, "warmup_time": "single-shot", "measurement_iterations": 16, "measurement_time": "single-shot", "score_confidence": [600.0504857870544, 644.0419823379455], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhChiSquare"}, {"benchmark": "org.renaissance.apache.spark.JmhDecTree.run", "mode": "ss", "threads": 1, "baseline_score": 697.9600176363637, "baseline_error": 5.973476157114325, "treatment_score": 705.5847349272726, "treatment_error": 6.266042458147568, "unit": "ms/op", "improvement_percent": -1.0924289498315403, "speedup": 0.9891937609850716, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.8807453714048911}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 40, "warmup_time": "single-shot", "measurement_iterations": 11, "measurement_time": "single-shot", "score_confidence": [691.9865414792494, 703.933493793478], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 40, "warmup_time": "single-shot", "measurement_iterations": 11, "measurement_time": "single-shot", "score_confidence": [699.318692469125, 711.8507773854202], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhDecTree"}, {"benchmark": "org.renaissance.scala.sat.JmhScalaDoku.run", "mode": "ss", "threads": 1, "baseline_score": 3371.7092758333333, "baseline_error": 975.3605364783958, "treatment_score": 3007.5966903, "treatment_error": 110.61195372088581, "unit": "ms/op", "improvement_percent": 10.799050444328163, "speedup": 1.1210642991820203, "status": "improved", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.3709331027948698}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [2396.3487393549376, 4347.069812311729], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [2896.9847365791143, 3118.2086440208855], "secondary_metrics": {}, "params": {}}, "display_name": "scala.sat.JmhScalaDoku"}, {"benchmark": "org.renaissance.scala.dotty.JmhDotty.run", "mode": "ss", "threads": 1, "baseline_score": 858.222575307692, "baseline_error": 2.4904675550019015, "treatment_score": 833.4219642615384, "treatment_error": 28.45395515522815, "unit": "ms/op", "improvement_percent": 2.8897644689971003, "speedup": 1.029757568326302, "status": "improved", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.8682854980364114}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [855.73210775269, 860.7130428626939], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [804.9680091063102, 861.8759194167666], "secondary_metrics": {}, "params": {}}, "display_name": "scala.dotty.JmhDotty"}, {"benchmark": "org.renaissance.apache.spark.JmhPageRank.run", "mode": "ss", "threads": 1, "baseline_score": 2980.7208227666665, "baseline_error": 82.34786497803258, "treatment_score": 3165.478268533333, "treatment_error": 65.13817866728023, "unit": "ms/op", "improvement_percent": -6.198414972495714, "speedup": 0.9416336395029903, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 1.759662301376521}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [2898.372957788634, 3063.068687744699], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [3100.340089866053, 3230.616447200613], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhPageRank"}, {"benchmark": "org.renaissance.jdk.streams.JmhParMnemonics.run", "mode": "ss", "threads": 1, "baseline_score": 2821.9286266800004, "baseline_error": 35.31912590071728, "treatment_score": 4122.15932004, "treatment_error": 145.55060439325715, "unit": "ms/op", "improvement_percent": -46.075959578386694, "speedup": 0.6845753420934292, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 8.681251913024306}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 16, "warmup_time": "single-shot", "measurement_iterations": 5, "measurement_time": "single-shot", "score_confidence": [2786.6095007792833, 2857.2477525807176], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 16, "warmup_time": "single-shot", "measurement_iterations": 5, "measurement_time": "single-shot", "score_confidence": [3976.608715646743, 4267.709924433258], "secondary_metrics": {}, "params": {}}, "display_name": "jdk.streams.JmhParMnemonics"}, {"benchmark": "org.renaissance.apache.spark.JmhGaussMix.run", "mode": "ss", "threads": 1, "baseline_score": 5110.907990472726, "baseline_error": 30.308833880698774, "treatment_score": 4863.557211345455, "treatment_error": 46.08604555007048, "unit": "ms/op", "improvement_percent": 4.8396640985977335, "speedup": 1.0508579972186334, "status": "improved", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 4.484298269788613}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 40, "warmup_time": "single-shot", "measurement_iterations": 11, "measurement_time": "single-shot", "score_confidence": [5080.599156592028, 5141.216824353424], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 40, "warmup_time": "single-shot", "measurement_iterations": 11, "measurement_time": "single-shot", "score_confidence": [4817.471165795384, 4909.643256895525], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhGaussMix"}, {"benchmark": "org.renaissance.apache.spark.JmhLogRegression.run", "mode": "ss", "threads": 1, "baseline_score": 732.4006642666666, "baseline_error": 22.29172514545442, "treatment_score": 738.1488440333335, "treatment_error": 15.04727200044057, "unit": "ms/op", "improvement_percent": -0.7848408729151561, "speedup": 0.9922127091126254, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.21372665024427848}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [710.1089391212122, 754.692389412121], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [723.1015720328929, 753.196116033774], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhLogRegression"}, {"benchmark": "org.renaissance.jdk.streams.JmhMnemonics.run", "mode": "ss", "threads": 1, "baseline_score": 3348.7895724400005, "baseline_error": 55.062966209929925, "treatment_score": 4284.35959988, "treatment_error": 123.554069304489, "unit": "ms/op", "improvement_percent": -27.937557950478304, "speedup": 0.781631302034917, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 6.916397859031722}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 16, "warmup_time": "single-shot", "measurement_iterations": 5, "measurement_time": "single-shot", "score_confidence": [3293.7266062300705, 3403.8525386499305], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 16, "warmup_time": "single-shot", "measurement_iterations": 5, "measurement_time": "single-shot", "score_confidence": [4160.8055305755115, 4407.913669184489], "secondary_metrics": {}, "params": {}}, "display_name": "jdk.streams.JmhMnemonics"}, {"benchmark": "org.renaissance.apache.spark.JmhNaiveBayes.run", "mode": "ss", "threads": 1, "baseline_score": 394.3855155749999, "baseline_error": 11.251901319507743, "treatment_score": 438.418452275, "treatment_error": 11.93239726431706, "unit": "ms/op", "improvement_percent": -11.164947737951703, "speedup": 0.8995641345123397, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.05", "t_statistic": 2.684798473692682}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [383.13361425549215, 405.6374168945076], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [426.48605501068295, 450.35084953931704], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhNaiveBayes"}, {"benchmark": "org.renaissance.database.JmhDbShootout.run", "mode": "ss", "threads": 1, "baseline_score": 3840.7782548800005, "baseline_error": 193.79404359641381, "treatment_score": 3936.4542138399997, "treatment_error": 60.405647693884816, "unit": "ms/op", "improvement_percent": -2.4910565674661282, "speedup": 0.9756948884039813, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.47133316941447584}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 16, "warmup_time": "single-shot", "measurement_iterations": 5, "measurement_time": "single-shot", "score_confidence": [3646.984211283587, 4034.5722984764143], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 16, "warmup_time": "single-shot", "measurement_iterations": 5, "measurement_time": "single-shot", "score_confidence": [3876.048566146115, 3996.8598615338847], "secondary_metrics": {}, "params": {}}, "display_name": "database.JmhDbShootout"}, {"benchmark": "org.renaissance.scala.stm.JmhPhilosophers.run", "mode": "ss", "threads": 1, "baseline_score": 4218.934393625, "baseline_error": 111.58101226909139, "treatment_score": 4330.643915924999, "treatment_error": 113.11694333373299, "unit": "ms/op", "improvement_percent": -2.647813686527048, "speedup": 0.9742048701143005, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.7030657238928216}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [4107.353381355908, 4330.515405894092], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [4217.526972591267, 4443.760859258732], "secondary_metrics": {}, "params": {}}, "display_name": "scala.stm.JmhPhilosophers"}, {"benchmark": "org.renaissance.jdk.concurrent.JmhFjKmeans.run", "mode": "ss", "threads": 1, "baseline_score": 1211.4243468750005, "baseline_error": 8.750263457820758, "treatment_score": 1255.9293153500003, "treatment_error": 6.837010323964717, "unit": "ms/op", "improvement_percent": -3.673772001512523, "speedup": 0.9645641136558731, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 4.007800937896685}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [1202.6740834171799, 1220.1746103328212], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [1249.0923050260355, 1262.766325673965], "secondary_metrics": {}, "params": {}}, "display_name": "jdk.concurrent.JmhFjKmeans"}, {"benchmark": "org.renaissance.twitter.finagle.JmhFinagleHttp.run", "mode": "ss", "threads": 1, "baseline_score": 5100.9937216, "baseline_error": 44.79464018158422, "treatment_score": 5106.14459125, "treatment_error": 111.48791185491419, "unit": "ms/op", "improvement_percent": -0.10097776886470691, "speedup": 0.9989912409337512, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.04287018956669805}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 12, "warmup_time": "single-shot", "measurement_iterations": 4, "measurement_time": "single-shot", "score_confidence": [5056.1990814184155, 5145.788361781584], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 12, "warmup_time": "single-shot", "measurement_iterations": 4, "measurement_time": "single-shot", "score_confidence": [4994.656679395086, 5217.632503104915], "secondary_metrics": {}, "params": {}}, "display_name": "twitter.finagle.JmhFinagleHttp"}, {"benchmark": "org.renaissance.jdk.streams.JmhScrabble.run", "mode": "ss", "threads": 1, "baseline_score": 67.07552393846154, "baseline_error": 2.048210657238691, "treatment_score": 116.47081206153845, "treatment_error": 4.318037539876481, "unit": "ms/op", "improvement_percent": -73.64130046661228, "speedup": 0.5758998563779357, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 10.335503191706444}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [65.02731328122286, 69.12373459570023], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [112.15277452166197, 120.78884960141494], "secondary_metrics": {}, "params": {}}, "display_name": "jdk.streams.JmhScrabble"}, {"benchmark": "org.renaissance.rx.JmhRxScrabble.run", "mode": "ss", "threads": 1, "baseline_score": 146.994173447619, "baseline_error": 6.007192814320811, "treatment_score": 149.0107346857144, "treatment_error": 8.286989188134275, "unit": "ms/op", "improvement_percent": -1.371864741845695, "speedup": 0.9864670069418245, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.1970210000199826}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 80, "warmup_time": "single-shot", "measurement_iterations": 21, "measurement_time": "single-shot", "score_confidence": [140.9869806332982, 153.0013662619398], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 80, "warmup_time": "single-shot", "measurement_iterations": 21, "measurement_time": "single-shot", "score_confidence": [140.72374549758013, 157.29772387384867], "secondary_metrics": {}, "params": {}}, "display_name": "rx.JmhRxScrabble"}, {"benchmark": "org.renaissance.jdk.concurrent.JmhFutureGenetic.run", "mode": "ss", "threads": 1, "baseline_score": 2232.478291153846, "baseline_error": 10.865261929001983, "treatment_score": 1998.6135881538466, "treatment_error": 18.10662029533202, "unit": "ms/op", "improvement_percent": 10.475564484845558, "speedup": 1.1170134659276605, "status": "improved", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 11.07501140901968}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [2221.613029224844, 2243.343553082848], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [1980.5069678585146, 2016.7202084491787], "secondary_metrics": {}, "params": {}}, "display_name": "jdk.concurrent.JmhFutureGenetic"}, {"benchmark": "org.renaissance.apache.spark.JmhAls.run", "mode": "ss", "threads": 1, "baseline_score": 1529.6982077750001, "baseline_error": 17.554219962511397, "treatment_score": 1368.5310330500001, "treatment_error": 20.5897334045644, "unit": "ms/op", "improvement_percent": 10.535880470136872, "speedup": 1.1177665473656173, "status": "improved", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 5.956553129162951}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [1512.1439878124888, 1547.2524277375114], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 30, "warmup_time": "single-shot", "measurement_iterations": 8, "measurement_time": "single-shot", "score_confidence": [1347.9412996454357, 1389.1207664545645], "secondary_metrics": {}, "params": {}}, "display_name": "apache.spark.JmhAls"}, {"benchmark": "org.renaissance.scala.stm.JmhScalaStmBench7.run", "mode": "ss", "threads": 1, "baseline_score": 1023.5347366000003, "baseline_error": 26.01218830187496, "treatment_score": 1108.563320625, "treatment_error": 21.756479630594598, "unit": "ms/op", "improvement_percent": -8.307347174894076, "speedup": 0.9232983967239137, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.05", "t_statistic": 2.5073797579079717}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 60, "warmup_time": "single-shot", "measurement_iterations": 16, "measurement_time": "single-shot", "score_confidence": [997.5225482981253, 1049.5469249018752], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 60, "warmup_time": "single-shot", "measurement_iterations": 16, "measurement_time": "single-shot", "score_confidence": [1086.8068409944053, 1130.3198002555946], "secondary_metrics": {}, "params": {}}, "display_name": "scala.stm.JmhScalaStmBench7"}, {"benchmark": "org.renaissance.twitter.finagle.JmhFinagleChirper.run", "mode": "ss", "threads": 1, "baseline_score": 4283.1778133826065, "baseline_error": 60.55492100858318, "treatment_score": 4481.924029460869, "treatment_error": 76.8727489440718, "unit": "ms/op", "improvement_percent": -4.640157956022475, "speedup": 0.9556560497741927, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 2.0309516737390054}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 90, "warmup_time": "single-shot", "measurement_iterations": 23, "measurement_time": "single-shot", "score_confidence": [4222.622892374024, 4343.732734391189], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 90, "warmup_time": "single-shot", "measurement_iterations": 23, "measurement_time": "single-shot", "score_confidence": [4405.051280516797, 4558.796778404941], "secondary_metrics": {}, "params": {}}, "display_name": "twitter.finagle.JmhFinagleChirper"}, {"benchmark": "org.renaissance.scala.stdlib.JmhScalaKmeans.run", "mode": "ss", "threads": 1, "baseline_score": 205.69070529230768, "baseline_error": 20.292807002244313, "treatment_score": 301.5954411999999, "treatment_error": 8.938103329965063, "unit": "ms/op", "improvement_percent": -46.62570229967452, "speedup": 0.6820086685458419, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 4.325092285174402}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [185.39789829006338, 225.98351229455199], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 50, "warmup_time": "single-shot", "measurement_iterations": 13, "measurement_time": "single-shot", "score_confidence": [292.65733787003484, 310.533544529965], "secondary_metrics": {}, "params": {}}, "display_name": "scala.stdlib.JmhScalaKmeans"}, {"benchmark": "org.renaissance.neo4j.JmhNeo4jAnalytics.run", "mode": "ss", "threads": 1, "baseline_score": 1366.9017843333336, "baseline_error": 28.936259884881636, "treatment_score": 1551.3190312, "treatment_error": 32.930737410154144, "unit": "ms/op", "improvement_percent": -13.491623829916241, "speedup": 0.8811222945392392, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 4.2068221432179405}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [1337.965524448452, 1395.8380442182151], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 20, "warmup_time": "single-shot", "measurement_iterations": 6, "measurement_time": "single-shot", "score_confidence": [1518.3882937898459, 1584.249768610154], "secondary_metrics": {}, "params": {}}, "display_name": "neo4j.JmhNeo4jAnalytics"}, {"benchmark": "org.renaissance.actors.JmhReactors.run", "mode": "ss", "threads": 1, "baseline_score": 10740.6295226, "baseline_error": 1085.6317972198294, "treatment_score": 11025.6821098, "treatment_error": 511.7820900652336, "unit": "ms/op", "improvement_percent": -2.653965362087982, "speedup": 0.974146489590278, "status": "regressed", "higher_is_better": false, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.23750116643499622}, "baseline_details": {"jvm": "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java", "jvm_args": ["-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:-EnableJVMCI", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 10, "warmup_time": "single-shot", "measurement_iterations": 3, "measurement_time": "single-shot", "score_confidence": [9654.99772538017, 11826.26131981983], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "/wf/tools/graalvm-ce-ristretto-21/bin/java", "jvm_args": ["-XX:ThreadPriorityPolicy=1", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCIProduct", "-XX:-UnlockExperimentalVMOptions", "-Xms16G", "-Xmx16G", "-XX:+UnlockExperimentalVMOptions", "-XX:+EnableJVMCI", "-XX:+UseJVMCICompiler", "-XX:+UseJVMCINativeLibrary", "--enable-native-access=ALL-UNNAMED", "--illegal-access=permit", "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED", "--add-opens=java.base/java.net=ALL-UNNAMED", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED", "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED", "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED", "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED"], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "21.0.8+9-LTS", "forks": 5, "warmup_iterations": 10, "warmup_time": "single-shot", "measurement_iterations": 3, "measurement_time": "single-shot", "score_confidence": [10513.900019734767, 11537.464199865233], "secondary_metrics": {}, "params": {}}, "display_name": "actors.JmhReactors"}];
+        let filteredData = [...originalData];
+        let currentSort = {column: -1, direction: 'asc'};
+        
+        function filterTable() {
+            const benchmarkFilter = document.getElementById('benchmarkFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const modeFilter = document.getElementById('modeFilter').value;
+            const significanceFilter = document.getElementById('significanceFilter').value;
+            
+            filteredData = originalData.filter(row => {
+                const matchesBenchmark = row.benchmark.toLowerCase().includes(benchmarkFilter);
+                const matchesStatus = !statusFilter || row.status === statusFilter;
+                const matchesMode = !modeFilter || row.mode === modeFilter;
+                const matchesSignificance = !significanceFilter || 
+                    (significanceFilter === 'significant' && row.statistical_significance.is_significant) ||
+                    (significanceFilter === 'not_significant' && !row.statistical_significance.is_significant);
+                
+                return matchesBenchmark && matchesStatus && matchesMode && matchesSignificance;
+            });
+            
+            updateTable();
+            updateFilteredStats();
+        }
+        
+        function updateTable() {
+            const tbody = document.getElementById('benchmarkTableBody');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach((data, index) => {
+                const statusClass = `status-${data.status}`;
+                const improvementSign = data.improvement_percent > 0 ? '+' : '';
+                const significanceDisplay = data.statistical_significance.is_significant ? 'Yes' : 'No';
+                
+                const row = document.createElement('tr');
+                row.onclick = () => showBenchmarkDetails(data);
+                row.innerHTML = `
+                    <td class="benchmark-name" title="${data.benchmark}">${data.display_name || data.benchmark}</td>
+                    <td>${data.mode}</td>
+                    <td class="number">${data.baseline_score.toFixed(4)} ± ${data.baseline_error.toFixed(4)}</td>
+                    <td class="number">${data.treatment_score.toFixed(4)} ± ${data.treatment_error.toFixed(4)}</td>
+                    <td>${data.unit}</td>
+                    <td class="number ${statusClass}">${data.speedup.toFixed(2)}x</td>
+                    <td>${significanceDisplay}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function updateFilteredStats() {
+            if (filteredData.length === 0) {
+                document.getElementById('filteredStats').innerHTML = '<strong>No data matches current filters</strong>';
+                document.getElementById('summaryTitle').textContent = 'Summary Statistics';
+                return;
+            }
+            
+            const improvements = filteredData.map(d => d.improvement_percent);
+            const speedups = filteredData.map(d => d.speedup);
+            
+            const avgImprovement = improvements.reduce((a, b) => a + b, 0) / improvements.length;
+            const medianImprovement = improvements.sort((a, b) => a - b)[Math.floor(improvements.length / 2)];
+            const avgSpeedup = speedups.reduce((a, b) => a + b, 0) / speedups.length;
+            const medianSpeedup = speedups.sort((a, b) => a - b)[Math.floor(speedups.length / 2)];
+            
+            const improvedCount = filteredData.filter(d => d.status === 'improved').length;
+            const regressedCount = filteredData.filter(d => d.status === 'regressed').length;
+            const unchangedCount = filteredData.filter(d => d.status === 'unchanged').length;
+            
+            // Calculate regression-specific statistics for filtered data
+            const regressions = filteredData.filter(d => d.status === 'regressed').map(d => d.improvement_percent);
+            const regressionSpeedups = filteredData.filter(d => d.status === 'regressed').map(d => d.speedup);
+            
+            const avgRegression = regressions.length > 0 ? regressions.reduce((a, b) => a + b, 0) / regressions.length : 0;
+            const medianRegression = regressions.length > 0 ? regressions.sort((a, b) => a - b)[Math.floor(regressions.length / 2)] : 0;
+            const avgRegressionSpeedup = regressionSpeedups.length > 0 ? regressionSpeedups.reduce((a, b) => a + b, 0) / regressionSpeedups.length : 1.0;
+            const medianRegressionSpeedup = regressionSpeedups.length > 0 ? regressionSpeedups.sort((a, b) => a - b)[Math.floor(regressionSpeedups.length / 2)] : 1.0;
+            
+            // Update summary statistics if filtered
+            if (filteredData.length < originalData.length) {
+                document.getElementById('summaryTitle').textContent = 'Summary Statistics (Filtered)';
+                document.getElementById('summaryStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${filteredData.length}</div>
+                        <div class="stat-label">Total Benchmarks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${improvedCount}</div>
+                        <div class="stat-label">Improved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${regressedCount}</div>
+                        <div class="stat-label">Regressed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgSpeedup.toFixed(2)}x</div>
+                        <div class="stat-label">Avg Speedup</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('summaryTitle').textContent = 'Summary Statistics';
+                // Reset to original values
+                document.getElementById('summaryStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">25</div>
+                        <div class="stat-label">Total Benchmarks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">Improved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">19</div>
+                        <div class="stat-label">Regressed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0.93x</div>
+                        <div class="stat-label">Avg Speedup</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('filteredStats').innerHTML = `
+                <strong>Filtered Results:</strong> 
+                ${filteredData.length} benchmarks | 
+                ${improvedCount} improved | 
+                ${regressedCount} regressed | 
+                ${unchangedCount} unchanged | 
+                Avg: ${avgImprovement.toFixed(2)}% | 
+                Median: ${medianImprovement.toFixed(2)}% | 
+                Avg Speedup: ${avgSpeedup.toFixed(2)}x
+            `;
+        }
+        
+        function sortTable(columnIndex) {
+            const headers = document.querySelectorAll('th');
+            
+            // Remove existing sort classes
+            headers.forEach(header => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Determine sort direction
+            const direction = (currentSort.column === columnIndex && currentSort.direction === 'asc') ? 'desc' : 'asc';
+            currentSort = {column: columnIndex, direction: direction};
+            
+            // Add sort class to current header
+            headers[columnIndex].classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            
+            // Sort the data
+            filteredData.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(columnIndex) {
+                    case 0: aVal = a.benchmark; bVal = b.benchmark; break;
+                    case 1: aVal = a.mode; bVal = b.mode; break;
+                    case 2: aVal = a.baseline_score; bVal = b.baseline_score; break;
+                    case 3: aVal = a.treatment_score; bVal = b.treatment_score; break;
+                    case 4: aVal = a.unit; bVal = b.unit; break;
+                    case 5: aVal = a.speedup; bVal = b.speedup; break;
+                    case 6: aVal = a.statistical_significance.is_significant; bVal = b.statistical_significance.is_significant; break;
+                    default: return 0;
+                }
+                
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                } else if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+                    return direction === 'asc' ? (aVal ? 1 : 0) - (bVal ? 1 : 0) : (bVal ? 1 : 0) - (aVal ? 1 : 0);
+                } else {
+                    const comparison = String(aVal).localeCompare(String(bVal));
+                    return direction === 'asc' ? comparison : -comparison;
+                }
+            });
+            
+            updateTable();
+        }
+        
+        function resetFilters() {
+            document.getElementById('benchmarkFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('modeFilter').value = '';
+            document.getElementById('significanceFilter').value = '';
+            filteredData = [...originalData];
+            updateTable();
+            updateFilteredStats();
+        }
+        
+        function exportFilteredData() {
+            const csvContent = [
+                ['Benchmark', 'Mode', 'Threads', 'Baseline Score', 'Treatment Score', 'Unit', 'Improvement %', 'Speedup', 'Status'],
+                ...filteredData.map(d => [
+                    d.benchmark, d.mode, d.threads, d.baseline_score, d.treatment_score, 
+                    d.unit, d.improvement_percent, d.speedup, d.status
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'filtered_benchmark_results.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function showBenchmarkDetails(data) {
+            const modal = document.getElementById('detailModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = data.benchmark;
+            
+            const statusClass = `status-${data.status}`;
+            const improvementSign = data.improvement_percent > 0 ? '+' : '';
+            const significanceClass = data.statistical_significance.is_significant ? 'significance-yes' : 'significance-no';
+            const significanceText = data.statistical_significance.is_significant ? 'Yes' : 'No';
+            
+            // Generate secondary metrics HTML
+            let baselineSecondaryHtml = '';
+            let treatmentSecondaryHtml = '';
+            
+            if (data.baseline_details.secondary_metrics && Object.keys(data.baseline_details.secondary_metrics).length > 0) {
+                baselineSecondaryHtml = Object.entries(data.baseline_details.secondary_metrics).map(([key, value]) => `
+                    <div class="detail-row">
+                        <span class="detail-label">${key}:</span>
+                        <span class="detail-value">${value.score?.toFixed(4) || 'N/A'} ${value.scoreUnit || ''}</span>
+                    </div>
+                `).join('');
+            }
+            
+            if (data.treatment_details.secondary_metrics && Object.keys(data.treatment_details.secondary_metrics).length > 0) {
+                treatmentSecondaryHtml = Object.entries(data.treatment_details.secondary_metrics).map(([key, value]) => `
+                    <div class="detail-row">
+                        <span class="detail-label">${key}:</span>
+                        <span class="detail-value">${value.score?.toFixed(4) || 'N/A'} ${value.scoreUnit || ''}</span>
+                    </div>
+                `).join('');
+            }
+            
+            modalBody.innerHTML = `
+                <div class="comparison-section">
+                    <h3>Performance Comparison</h3>
+                    <div class="metric-comparison">
+                        <div class="metric-box">
+                            <div class="metric-value">${data.baseline_score.toFixed(4)}</div>
+                            <div class="metric-error">± ${data.baseline_error.toFixed(4)}</div>
+                            <div class="metric-label">Baseline (${data.baseline_vm})</div>
+                        </div>
+                        <div class="metric-arrow">→</div>
+                        <div class="metric-box">
+                            <div class="metric-value">${data.treatment_score.toFixed(4)}</div>
+                            <div class="metric-error">± ${data.treatment_error.toFixed(4)}</div>
+                            <div class="metric-label">Treatment (${data.treatment_vm})</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin: 15px 0;">
+                        <strong>Unit:</strong> ${data.unit} | 
+                        <strong class="${statusClass}">Improvement:</strong> <span class="${statusClass}">${improvementSign}${data.improvement_percent.toFixed(2)}%</span> | 
+                        <strong class="${statusClass}">Speedup:</strong> <span class="${statusClass}">${data.speedup.toFixed(2)}x</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <strong>Statistical Significance:</strong> 
+                        <span class="significance-badge ${significanceClass}">${significanceText}</span>
+                        <span style="margin-left: 10px;">(${data.statistical_significance.confidence_level})</span>
+                    </div>
+                </div>
+                
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <h3>Baseline Details</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">VM Name:</span>
+                            <span class="detail-value">${data.baseline_details.vm_name || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">VM Version:</span>
+                            <span class="detail-value">${data.baseline_details.vm_version || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Mode:</span>
+                            <span class="detail-value">${data.mode}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Threads:</span>
+                            <span class="detail-value">${data.threads}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Forks:</span>
+                            <span class="detail-value">${data.baseline_details.forks}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Warmup Iterations:</span>
+                            <span class="detail-value">${data.baseline_details.warmup_iterations}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Warmup Time:</span>
+                            <span class="detail-value">${data.baseline_details.warmup_time || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Measurement Iterations:</span>
+                            <span class="detail-value">${data.baseline_details.measurement_iterations}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Measurement Time:</span>
+                            <span class="detail-value">${data.baseline_details.measurement_time || 'N/A'}</span>
+                        </div>
+                        ${data.baseline_details.score_confidence && data.baseline_details.score_confidence.length > 0 ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Score Confidence:</span>
+                            <span class="detail-value">[${data.baseline_details.score_confidence.map(x => x.toFixed(4)).join(', ')}]</span>
+                        </div>
+                        ` : ''}
+                        <div style="margin-top: 15px;">
+                            <strong>JVM Arguments:</strong>
+                            <div class="jvm-args">${data.baseline_details.jvm_args.length > 0 ? data.baseline_details.jvm_args.join('\n') : 'None'}</div>
+                        </div>
+                        ${data.baseline_details.params && Object.keys(data.baseline_details.params).length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Parameters:</strong>
+                            <div class="jvm-args">${Object.entries(data.baseline_details.params).map(([key, value]) => `${key}: ${value}`).join('\n')}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Treatment Details</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">VM Name:</span>
+                            <span class="detail-value">${data.treatment_details.vm_name || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">VM Version:</span>
+                            <span class="detail-value">${data.treatment_details.vm_version || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Mode:</span>
+                            <span class="detail-value">${data.mode}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Threads:</span>
+                            <span class="detail-value">${data.threads}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Forks:</span>
+                            <span class="detail-value">${data.treatment_details.forks}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Warmup Iterations:</span>
+                            <span class="detail-value">${data.treatment_details.warmup_iterations}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Warmup Time:</span>
+                            <span class="detail-value">${data.treatment_details.warmup_time || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Measurement Iterations:</span>
+                            <span class="detail-value">${data.treatment_details.measurement_iterations}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Measurement Time:</span>
+                            <span class="detail-value">${data.treatment_details.measurement_time || 'N/A'}</span>
+                        </div>
+                        ${data.treatment_details.score_confidence && data.treatment_details.score_confidence.length > 0 ? `
+                        <div class="detail-row">
+                            <span class="detail-label">Score Confidence:</span>
+                            <span class="detail-value">[${data.treatment_details.score_confidence.map(x => x.toFixed(4)).join(', ')}]</span>
+                        </div>
+                        ` : ''}
+                        <div style="margin-top: 15px;">
+                            <strong>JVM Arguments:</strong>
+                            <div class="jvm-args">${data.treatment_details.jvm_args.length > 0 ? data.treatment_details.jvm_args.join('\n') : 'None'}</div>
+                        </div>
+                        ${data.treatment_details.params && Object.keys(data.treatment_details.params).length > 0 ? `
+                        <div style="margin-top: 15px;">
+                            <strong>Parameters:</strong>
+                            <div class="jvm-args">${Object.entries(data.treatment_details.params).map(([key, value]) => `${key}: ${value}`).join('\n')}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                ${baselineSecondaryHtml || treatmentSecondaryHtml ? `
+                <div class="detail-grid">
+                    ${baselineSecondaryHtml ? `
+                    <div class="secondary-metrics">
+                        <h4>Baseline Secondary Metrics</h4>
+                        ${baselineSecondaryHtml}
+                    </div>
+                    ` : '<div></div>'}
+                    ${treatmentSecondaryHtml ? `
+                    <div class="secondary-metrics">
+                        <h4>Treatment Secondary Metrics</h4>
+                        ${treatmentSecondaryHtml}
+                    </div>
+                    ` : '<div></div>'}
+                </div>
+                ` : ''}
+            `;
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        function showBarChart() {
+            if (filteredData.length === 0) {
+                alert('No data available to display in chart');
+                return;
+            }
+            
+            const modal = document.getElementById('chartModal');
+            const ctx = document.getElementById('benchmarkChart').getContext('2d');
+            
+            // Prepare data for the chart - keep same order as grid, limit to first 20 for readability
+            const chartData = filteredData.slice(0, Math.min(20, filteredData.length));
+            
+            const labels = chartData.map(d => {
+                // Use display name (with common prefix/suffix removed)
+                const name = d.display_name || d.benchmark;
+                return name.length > 50 ? name.substring(0, 50) + '...' : name;
+            });
+            
+            const speedupValues = chartData.map(d => d.speedup);
+            const backgroundColors = chartData.map(d => {
+                if (d.status === 'improved') return '#28a745';
+                if (d.status === 'regressed') return '#dc3545';
+                return '#6c757d';
+            });
+            
+            // Destroy existing chart if it exists
+            if (window.benchmarkChartInstance) {
+                window.benchmarkChartInstance.destroy();
+            }
+            
+            // Create new chart
+            window.benchmarkChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Speedup',
+                        data: speedupValues,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Benchmark Speedup - First ${chartData.length} Results ${filteredData.length < originalData.length ? '(Filtered)' : ''}`
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Speedup (x)'
+                            },
+                            grid: {
+                                display: true
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Benchmarks'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const benchmark = chartData[index];
+                            showBenchmarkDetails(benchmark);
+                            closeChartModal();
+                        }
+                    },
+                    onHover: (event, elements) => {
+                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                    }
+                }
+            });
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeChartModal() {
+            document.getElementById('chartModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const detailModal = document.getElementById('detailModal');
+            const chartModal = document.getElementById('chartModal');
+            if (event.target === detailModal) {
+                closeModal();
+            }
+            if (event.target === chartModal) {
+                closeChartModal();
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeChartModal();
+            }
+        });
+        
+        // Initialize
+        updateFilteredStats();
+        updateTable(); // Ensure click handlers are attached to initial rows
+    </script>
+</body>
+</html>

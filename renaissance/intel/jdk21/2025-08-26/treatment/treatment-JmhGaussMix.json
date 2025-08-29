@@ -1,0 +1,134 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.apache.spark.JmhGaussMix.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/graalvm-ce-ristretto-21/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCI",
+            "-XX:+UseJVMCICompiler",
+            "-XX:+UseJVMCINativeLibrary",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 40,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 11,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 4863.557211345455,
+            "scoreError" : 46.08604555007048,
+            "scoreConfidence" : [
+                4817.471165795384,
+                4909.643256895525
+            ],
+            "scorePercentiles" : {
+                "0.0" : 4704.067233,
+                "50.0" : 4866.566355,
+                "90.0" : 5016.6677303999995,
+                "95.0" : 5024.9938178,
+                "99.0" : 5042.498664,
+                "99.9" : 5042.498664,
+                "99.99" : 5042.498664,
+                "99.999" : 5042.498664,
+                "99.9999" : 5042.498664,
+                "100.0" : 5042.498664
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    4919.683481,
+                    4902.735431,
+                    4898.501047,
+                    4919.22242,
+                    4884.563449,
+                    4895.637323,
+                    4885.332969,
+                    4908.34735,
+                    4883.634247,
+                    4885.832772,
+                    4893.323975
+                ],
+                [
+                    5027.485645,
+                    5024.370861,
+                    5018.304843,
+                    5042.498664,
+                    5019.142373,
+                    5015.576322,
+                    5005.755076,
+                    5006.035163,
+                    5012.231519,
+                    5002.069477,
+                    5005.944218
+                ],
+                [
+                    4747.271171,
+                    4734.086029,
+                    4737.837079,
+                    4735.693357,
+                    4735.491201,
+                    4727.953303,
+                    4708.424534,
+                    4704.067233,
+                    4731.414487,
+                    4722.608367,
+                    4705.771085
+                ],
+                [
+                    4866.593626,
+                    4878.040232,
+                    4891.081286,
+                    4860.484576,
+                    4863.829062,
+                    4891.620816,
+                    4861.001235,
+                    4858.377767,
+                    4866.566355,
+                    4866.27907,
+                    4874.552792
+                ],
+                [
+                    4798.123237,
+                    4795.239133,
+                    4808.985819,
+                    4803.425634,
+                    4803.176067,
+                    4805.282935,
+                    4791.049021,
+                    4802.963499,
+                    4814.914481,
+                    4829.038765,
+                    4818.174745
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

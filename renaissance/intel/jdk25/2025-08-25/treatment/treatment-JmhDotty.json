@@ -1,0 +1,145 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.scala.dotty.JmhDotty.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/graalvm-community-openjdk-25+25.1/bin/java",
+        "jvmArgs" : [
+            "-XX:ThreadPriorityPolicy=1",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCIProduct",
+            "-XX:+EnableJVMCI",
+            "-XX:-UnlockExperimentalVMOptions",
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+EnableJVMCI",
+            "-XX:+UseJVMCICompiler",
+            "-XX:+UseJVMCINativeLibrary",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "25",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "25+25-jvmci-b01",
+        "warmupIterations" : 50,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 13,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 831.7380733076923,
+            "scoreError" : 28.13867402433967,
+            "scoreConfidence" : [
+                803.5993992833526,
+                859.876747332032
+            ],
+            "scorePercentiles" : {
+                "0.0" : 757.104697,
+                "50.0" : 845.071434,
+                "90.0" : 899.5032128,
+                "95.0" : 901.5818796,
+                "99.0" : 913.127579,
+                "99.9" : 913.127579,
+                "99.99" : 913.127579,
+                "99.999" : 913.127579,
+                "99.9999" : 913.127579,
+                "100.0" : 913.127579
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    899.470396,
+                    899.552438,
+                    896.118581,
+                    900.160513,
+                    898.403799,
+                    896.413318,
+                    896.645584,
+                    819.942066,
+                    764.642398,
+                    760.38759,
+                    763.276343,
+                    761.811906,
+                    761.551339
+                ],
+                [
+                    901.799631,
+                    913.127579,
+                    898.126678,
+                    895.066499,
+                    901.073793,
+                    906.955552,
+                    889.543569,
+                    859.68514,
+                    763.01765,
+                    762.61391,
+                    759.523262,
+                    758.222124,
+                    763.15542
+                ],
+                [
+                    891.297485,
+                    897.889183,
+                    895.044141,
+                    891.755867,
+                    892.874476,
+                    895.301345,
+                    894.108385,
+                    817.941884,
+                    760.311483,
+                    758.733933,
+                    758.858926,
+                    760.468027,
+                    757.884461
+                ],
+                [
+                    898.695629,
+                    899.331275,
+                    897.254983,
+                    895.699923,
+                    893.334383,
+                    894.016671,
+                    812.709614,
+                    766.680864,
+                    771.905447,
+                    767.846404,
+                    764.597751,
+                    766.367506,
+                    758.707402
+                ],
+                [
+                    894.558887,
+                    897.161179,
+                    896.256851,
+                    895.712798,
+                    845.071434,
+                    764.139727,
+                    763.521551,
+                    757.104697,
+                    760.284549,
+                    759.592991,
+                    758.429051,
+                    757.442666,
+                    763.793858
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+

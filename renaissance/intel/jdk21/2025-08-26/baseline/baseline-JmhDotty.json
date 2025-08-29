@@ -1,0 +1,138 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.renaissance.scala.dotty.JmhDotty.run",
+        "mode" : "ss",
+        "threads" : 1,
+        "forks" : 5,
+        "jvm" : "/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java",
+        "jvmArgs" : [
+            "-Xms16G",
+            "-Xmx16G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:-EnableJVMCI",
+            "--enable-native-access=ALL-UNNAMED",
+            "--illegal-access=permit",
+            "--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-opens=java.base/java.net=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.nio=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.8",
+        "vmName" : "OpenJDK 64-Bit Server VM",
+        "vmVersion" : "21.0.8+9-LTS",
+        "warmupIterations" : 50,
+        "warmupTime" : "single-shot",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 13,
+        "measurementTime" : "single-shot",
+        "measurementBatchSize" : 1,
+        "primaryMetric" : {
+            "score" : 858.222575307692,
+            "scoreError" : 2.4904675550019015,
+            "scoreConfidence" : [
+                855.73210775269,
+                860.7130428626939
+            ],
+            "scorePercentiles" : {
+                "0.0" : 846.954699,
+                "50.0" : 858.23566,
+                "90.0" : 867.3459707999999,
+                "95.0" : 868.1781681,
+                "99.0" : 870.619888,
+                "99.9" : 870.619888,
+                "99.99" : 870.619888,
+                "99.999" : 870.619888,
+                "99.9999" : 870.619888,
+                "100.0" : 870.619888
+            },
+            "scoreUnit" : "ms/op",
+            "rawData" : [
+                [
+                    865.128796,
+                    865.872465,
+                    867.67788,
+                    863.152721,
+                    864.796731,
+                    861.264154,
+                    867.917416,
+                    860.511737,
+                    859.765158,
+                    859.191904,
+                    859.720467,
+                    861.274936,
+                    857.290975
+                ],
+                [
+                    858.978495,
+                    869.133101,
+                    868.289919,
+                    858.995446,
+                    859.16853,
+                    858.451102,
+                    857.809425,
+                    855.261579,
+                    853.41479,
+                    852.454275,
+                    854.493469,
+                    849.718479,
+                    851.387572
+                ],
+                [
+                    858.291384,
+                    858.441978,
+                    857.274927,
+                    854.860906,
+                    852.614727,
+                    850.319069,
+                    860.216413,
+                    852.011855,
+                    860.343672,
+                    854.714488,
+                    849.354182,
+                    851.079936,
+                    846.967841
+                ],
+                [
+                    856.664333,
+                    864.364982,
+                    855.34221,
+                    857.116522,
+                    855.320673,
+                    856.153735,
+                    854.726739,
+                    852.84981,
+                    852.382859,
+                    851.692251,
+                    849.068993,
+                    851.440894,
+                    846.954699
+                ],
+                [
+                    862.94267,
+                    870.619888,
+                    867.124698,
+                    866.198274,
+                    867.695603,
+                    862.013597,
+                    863.481535,
+                    862.771076,
+                    862.274684,
+                    857.394148,
+                    858.23566,
+                    857.379161,
+                    854.644801
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+
