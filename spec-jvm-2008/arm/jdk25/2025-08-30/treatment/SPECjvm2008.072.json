@@ -1,0 +1,54 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.sunflow",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 1,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 32.77,
+      "scoreError": 0.0,
+      "scoreConfidence": [
+        32.77,
+        32.77
+      ],
+      "scorePercentiles": {
+        "0.0": 32.77,
+        "50.0": 32.77,
+        "90.0": 32.77,
+        "95.0": 32.77,
+        "99.0": 32.77,
+        "99.9": 32.77,
+        "99.99": 32.77,
+        "100.0": 32.77
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          32.77
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Sat Aug 30 08:33:54 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "sunflow"
+    }
+  }
+]

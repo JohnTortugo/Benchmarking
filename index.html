@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenJDK HotSpot vs GraalVM JIT — Benchmark Results</title>
+  <style>
+    :root{
+      --bg: #0b0e12;
+      --card: #11161d;
+      --muted: #8aa0b6;
+      --text: #e7edf5;
+      --accent: #6bc2ff;
+      --accent-2: #9dffb0;
+      --chip: #1a2330;
+      --chip-border: #263244;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8fb; --card:#ffffff; --muted:#546e7a; --text:#0b1a2b; --chip:#eef4fb; --chip-border:#d3e2f0; --accent:#006dff; --accent-2:#009c6b; --shadow:0 10px 30px rgba(0,0,0,.08);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font:500 16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif; background:var(--bg); color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.2) blur(8px);
+      background:linear-gradient(180deg, rgba(11,14,18,.85), rgba(11,14,18,.6));
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .container{max-width:1100px; margin:0 auto; padding:20px 20px 32px}
+    .hero{display:flex; align-items:center; gap:16px; padding:6px 0 8px}
+    .hero svg{flex:0 0 auto}
+    h1{font-weight:800; letter-spacing:.2px; font-size:clamp(22px,3vw,28px); margin:0}
+    .subtitle{color:var(--muted); font-size:14px; margin-top:4px}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:22px}
+    .card{
+      background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease
+    }
+    .card:hover{transform:translateY(-2px); box-shadow:0 16px 40px rgba(0,0,0,.28); border-color:rgba(255,255,255,.14)}
+    .card h2{font-size:18px; margin:0 0 12px}
+
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px}
+    .chip{
+      display:inline-flex; align-items:center; gap:6px; padding:6px 10px; background:var(--chip); border:1px solid var(--chip-border); border-radius:999px; font-size:12px; color:var(--muted)
+    }
+    .chip strong{color:var(--text); font-weight:700}
+
+    .links{display:flex; flex-direction:column; gap:10px}
+    .link{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.06);
+      text-decoration:none; color:var(--text); background:linear-gradient(0deg, rgba(255,255,255,.02), rgba(255,255,255,.0));
+      transition:background .18s ease, border-color .18s ease, transform .18s ease
+    }
+    .link:hover{background:linear-gradient(0deg, rgba(255,255,255,.06), rgba(255,255,255,.0)); border-color:rgba(255,255,255,.14); transform:translateY(-1px)}
+    .link .left{display:flex; align-items:center; gap:12px}
+    .arch{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); padding:4px 8px; border-radius:999px; border:1px dashed var(--chip-border)}
+    .date{font-size:12px; color:var(--muted)}
+
+    .suite{display:flex; align-items:center; gap:10px}
+    .badge{font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid currentColor; opacity:.9}
+    .badge.acc{color:var(--accent)}
+    .badge.ok{color:var(--accent-2)}
+
+    footer{opacity:.8; color:var(--muted); font-size:12px; margin-top:28px}
+
+    /* Tiny utility to space sections */
+    section{margin-top:18px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="hero">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <h1>OpenJDK HotSpot vs GraalVM JIT — Benchmark Results</h1>
+          <div class="subtitle">Curated links to side‑by‑side comparisons by suite, Java version, and architecture.</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Renaissance -->
+    <section class="card">
+      <div class="suite">
+        <h2 style="margin:0">Renaissance</h2>
+        <span class="badge acc" title="High-level, modern JVM benchmark suite">SUITE</span>
+      </div>
+      <div class="grid">
+        <!-- Java 25 card -->
+        <div class="card">
+          <div class="chips">
+            <span class="chip"><strong>Java</strong> 25</span>
+            <span class="chip">HotSpot vs GraalVM</span>
+          </div>
+          <div class="links">
+            <a class="link" href="./renaissance/intel/jdk25/2025-08-25/index.html">
+              <div class="left">
+                <span class="arch" title="x86_64 (Intel/AMD)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  x86_64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on Renaissance @ x86_64</strong>
+              </div>
+              <span class="date" data-date="2025-08-25"></span>
+            </a>
+            <a class="link" href="./renaissance/arm/jdk25/2025-08-24/index.html">
+              <div class="left">
+                <span class="arch" title="AArch64 (Arm)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  AArch64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on Renaissance-0.16 @ AArch64</strong>
+              </div>
+              <span class="date" data-date="2025-08-24"></span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Java 21 card -->
+        <div class="card">
+          <div class="chips">
+            <span class="chip"><strong>Java</strong> 21 (LTS)</span>
+            <span class="chip">HotSpot vs GraalVM</span>
+          </div>
+          <div class="links">
+            <a class="link" href="./renaissance/intel/jdk21/2025-08-26/index.html">
+              <div class="left">
+                <span class="arch" title="x86_64 (Intel/AMD)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  x86_64
+                </span>
+                <strong>OpenJDK21 vs Graal21 on Renaissance @ x86_64</strong>
+              </div>
+              <span class="date" data-date="2025-08-26"></span>
+            </a>
+            <a class="link" href="./renaissance/arm/jdk21/2025-08-24/index.html">
+              <div class="left">
+                <span class="arch" title="AArch64 (Arm)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  AArch64
+                </span>
+                <strong>OpenJDK21 vs Graal21 on Renaissance-0.16 @ AArch64</strong>
+              </div>
+              <span class="date" data-date="2025-08-24"></span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- OpenJDK Micro Benchmarks -->
+    <section class="card">
+      <div class="suite">
+        <h2 style="margin:0">OpenJDK Micro Benchmarks</h2>
+        <span class="badge ok" title="JMH-based microbenchmarks">SUITE</span>
+      </div>
+      <div class="grid">
+        <!-- Java 25 card -->
+        <div class="card">
+          <div class="chips">
+            <span class="chip"><strong>Java</strong> 25</span>
+            <span class="chip">HotSpot vs GraalVM</span>
+          </div>
+          <div class="links">
+            <a class="link" href="./jdk25-micros/intel/jdk25/2025-08-24/index.html">
+              <div class="left">
+                <span class="arch" title="x86_64 (Intel/AMD)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  x86_64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on HotSpot Microbenchmarks @ x86_64</strong>
+              </div>
+              <span class="date" data-date="2025-08-24"></span>
+            </a>
+            <a class="link" href="./jdk25-micros/arm/jdk25/2025-08-24/index.html">
+              <div class="left">
+                <span class="arch" title="AArch64 (Arm)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  AArch64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on HotSpot Microbenchmarks @ AArch64</strong>
+              </div>
+              <span class="date" data-date="2025-08-24"></span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SPEC JVM 2008 -->
+    <section class="card">
+      <div class="suite">
+        <h2 style="margin:0">SPEC JVM 2008</h2>
+        <span class="badge acc" title="Standard Performance Evaluation Corporation JVM benchmark">SUITE</span>
+      </div>
+      <div class="grid">
+        <!-- Java 25 card -->
+        <div class="card">
+          <div class="chips">
+            <span class="chip"><strong>Java</strong> 25</span>
+            <span class="chip">HotSpot vs GraalVM</span>
+          </div>
+          <div class="links">
+            <a class="link" href="./spec-jvm-2008/intel/jdk25/2025-08-31/index.html">
+              <div class="left">
+                <span class="arch" title="x86_64 (Intel/AMD)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  x86_64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on SPEC-JVM-2008 @ x86_64</strong>
+              </div>
+              <span class="date" data-date="2025-08-31"></span>
+            </a>
+            <a class="link" href="./spec-jvm-2008/arm/jdk25/2025-08-30/index.html">
+              <div class="left">
+                <span class="arch" title="AArch64 (Arm)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  AArch64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on SPEC-JVM-2008 @ AArch64</strong>
+              </div>
+              <span class="date" data-date="2025-08-30"></span>
+            </a>
+            <a class="link" href="./spec-jvm-2008/arm/jdk25/2025-09-01/index.html">
+              <div class="left">
+                <span class="arch" title="AArch64 (Arm)">
+                  <!-- CPU icon -->
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="6" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity=".18"/></svg>
+                  AArch64
+                </span>
+                <strong>OpenJDK25 vs Graal25 on SPEC-JVM-2008 @ AArch64</strong>
+              </div>
+              <span class="date" data-date="2025-09-01"></span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <footer>
+      Tip: Right‑click a link and open in a new tab to compare multiple reports side‑by‑side.
+    </footer>
+  </main>
+
+  <script>
+    // Pretty-print ISO dates as "Updated Aug 26, 2025" and add relative title
+    (function(){
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      document.querySelectorAll('.date[data-date]').forEach(function(el){
+        const iso = el.getAttribute('data-date');
+        const d = new Date(iso + 'T12:00:00');
+        if(!isNaN(d)){
+          const label = 'Updated ' + months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
+          el.textContent = label;
+          const days = Math.round((Date.now() - d.getTime())/86400000);
+          el.title = days === 0 ? 'today' : days + ' day' + (days!==1?'s':'') + ' ago';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

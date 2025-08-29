@@ -1,5 +1,52 @@
+### Title
+OpenJDK25 vs Graal25 on HotSpot Microbenchmarks @ AArch64
 
-This is the script used to collect the results:
+### Platform OS
+Linux
+
+### Platform Architecture
+AArch64
+
+### Benchmark Details
+OpenJDK 25 HotSpot JMH Microbenchmarks
+
+### Baseline Label
+OpenJDK25
+
+### Treatment Label
+GraalVM25
+
+### Baseline VM Details
+openjdk version "25" 2025-07-20
+OpenJDK Runtime Environment Corretto-25.0.0.32.1 (build 25+32-Nightly)
+OpenJDK 64-Bit Server VM Corretto-25.0.0.32.1 (build 25+32-Nightly, mixed mode, sharing)
+
+### Treatment VM Details
+openjdk version "25" 2025-09-16
+OpenJDK Runtime Environment GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01)
+OpenJDK 64-Bit Server VM GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01, mixed mode, sharing)
+
+### Machine Details
+=== RAM ===
+MemTotal:       131615788 kB
+
+=== CPU ===
+CPU(s):                               64
+Model name:                           Neoverse-V1
+Thread(s) per core:                   1
+Core(s) per socket:                   64
+Socket(s):                            1
+
+=== OS ===
+PRETTY_NAME="Ubuntu 24.04.2 LTS"
+VERSION_ID="24.04"
+Kernel:  uname -r
+
+=== AMI ===
+ami-0c4e709339fa8521a
+
+
+### Script used to run the benchmarks
 
 ```
 #!/bin/bash
@@ -12,22 +59,15 @@ TREATMENT_ARGS="-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMC
 
 JDKMICRO_ARGS=""
 
-BENCHMARKS=("org.openjdk.bench.java.io." "org.openjdk.bench.java.nio.")
-
-# DONE	    "org.openjdk.bench.java.math."               \
-# DONE      "org.openjdk.bench.java.net."                \
-# DONE      "org.openjdk.bench.java.lang.Array"          \
-# DONE      "org.openjdk.bench.javax.crypto."            \	# Takes ~4hrs total
-# DONE      "org.openjdk.bench.java.util."               \	# Takes ~34hrs total
-# DONE 	    "org.openjdk.bench.java.lang.String"	 \
-# DONE      "org.openjdk.bench.java.lang.Integers"       \
-# DONE      "org.openjdk.bench.java.io."                 \
-# DONE      "org.openjdk.bench.java.nio."                \
-
-
-################ Sets a bunch of configs to make the experiment more producible #####################
-# source no_noise.sh
-
+BENCHMARKS=("org.openjdk.bench.java.io." 
+            "org.openjdk.bench.java.nio."                 
+            "org.openjdk.bench.java.math."                
+            "org.openjdk.bench.java.net."                 
+            "org.openjdk.bench.java.lang.Array"           
+            "org.openjdk.bench.javax.crypto."             
+            "org.openjdk.bench.java.util."                
+            "org.openjdk.bench.java.lang.String"	      
+            "org.openjdk.bench.java.lang.Integers")
 
 
 for bench in ${BENCHMARKS[@]} ; do
@@ -42,7 +82,7 @@ done
 ```
 
 
-This is the release file for the OpenJDK build:
+### OpenJDK "release" file content
 
 ```
 IMPLEMENTOR="Amazon.com Inc."
@@ -58,7 +98,7 @@ SOURCE=".:git:0f7ca194fb71+"
 ```
 
 
-This is the release file for the GraalVM build:
+### GraalVM "release" file content
 
 ```
 IMPLEMENTOR="GraalVM Community"

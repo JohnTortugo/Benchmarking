@@ -1,0 +1,42 @@
+Intel
+
+        JDK
+
+            Benchmark                              Mode  Cnt      Score     Error  Units
+            CsvUtilsBenchmarkParse.original        avgt    3  14,303.676 ± 605.431  ns/op
+            CsvUtilsBenchmarkParse.originalQuoted  avgt    3  15,708.214 ± 218.825  ns/op
+            CsvUtilsBenchmarkParse.tuned1          avgt    3  11,875.828 ± 366.809  ns/op
+            CsvUtilsBenchmarkParse.tuned1Quoted    avgt    3  12,719.514 ± 389.368  ns/op
+
+        Graal
+
+            Benchmark                              Mode  Cnt      Score       Error  Units
+            CsvUtilsBenchmarkParse.original        avgt    3  16,989.537 ±   526.526  ns/op
+            CsvUtilsBenchmarkParse.originalQuoted  avgt    3  18,044.999 ±  2022.290  ns/op
+            CsvUtilsBenchmarkParse.tuned1          avgt    3  14,020.778 ± 15833.272  ns/op
+            CsvUtilsBenchmarkParse.tuned1Quoted    avgt    3  19,466.104 ± 70322.820  ns/op
+
+
+
+ARM
+
+
+        JDK
+
+            CsvUtilsBenchmarkParse.original        avgt    3  16,317.918 ±  77.706  ns/op
+            CsvUtilsBenchmarkParse.originalQuoted  avgt    3  16,664.016 ± 557.058  ns/op
+            CsvUtilsBenchmarkParse.tuned1          avgt    3   9,008.852 ± 436.654  ns/op
+            CsvUtilsBenchmarkParse.tuned1Quoted    avgt    3  13,351.901 ± 725.572  ns/op
+
+
+
+        Graal
+
+            Benchmark                              Mode  Cnt      Score     Error  Units
+            CsvUtilsBenchmarkParse.original        avgt    3  16,710.705 ± 503.265  ns/op
+            CsvUtilsBenchmarkParse.originalQuoted  avgt    3  17,101.516 ± 901.913  ns/op
+            CsvUtilsBenchmarkParse.tuned1          avgt    3  12,167.530 ± 192.695  ns/op
+            CsvUtilsBenchmarkParse.tuned1Quoted    avgt    3  12,960.470 ± 204.997  ns/op
+
+
+

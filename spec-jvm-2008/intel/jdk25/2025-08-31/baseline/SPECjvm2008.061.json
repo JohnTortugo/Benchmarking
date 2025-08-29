@@ -1,0 +1,72 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.serial",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+32-Nightly mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+32-Nightly mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 5,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 1047.612,
+      "scoreError": 16.424197697300176,
+      "scoreConfidence": [
+        1033.215555969393,
+        1062.008444030607
+      ],
+      "scorePercentiles": {
+        "0.0": 1033.72,
+        "50.0": 1040.08,
+        "90.0": 1065.988,
+        "95.0": 1068.4940000000001,
+        "99.0": 1070.4987999999998,
+        "99.9": 1070.9498800000001,
+        "99.99": 1070.994988,
+        "100.0": 1071.0
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          1071.0,
+          1058.47,
+          1040.08,
+          1033.72,
+          1034.79
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Mon Sep 01 07:42:02 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "serial",
+      "iterationStatistics": {
+        "iterationCount": 5,
+        "mean": 1047.612,
+        "standardDeviation": 16.424197697300176,
+        "minimum": 1033.72,
+        "maximum": 1071.0,
+        "individualScores": [
+          1071.0,
+          1058.47,
+          1040.08,
+          1033.72,
+          1034.79
+        ]
+      }
+    }
+  }
+]

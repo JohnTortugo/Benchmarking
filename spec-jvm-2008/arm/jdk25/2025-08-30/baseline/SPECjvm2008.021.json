@@ -1,0 +1,54 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.startup.scimark.monte_carlo",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+32-Nightly mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+32-Nightly mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 1,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 36.95,
+      "scoreError": 0.0,
+      "scoreConfidence": [
+        36.95,
+        36.95
+      ],
+      "scorePercentiles": {
+        "0.0": 36.95,
+        "50.0": 36.95,
+        "90.0": 36.95,
+        "95.0": 36.95,
+        "99.0": 36.95,
+        "99.9": 36.95,
+        "99.99": 36.95,
+        "100.0": 36.95
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          36.95
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Sat Aug 30 05:22:01 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "startup.scimark.monte_carlo"
+    }
+  }
+]

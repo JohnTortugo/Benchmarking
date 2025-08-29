@@ -1,0 +1,72 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.startup.crypto.signverify",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 5,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 115.712,
+      "scoreError": 1.6210860557046318,
+      "scoreConfidence": [
+        114.29105542177044,
+        117.13294457822957
+      ],
+      "scorePercentiles": {
+        "0.0": 114.72,
+        "50.0": 114.94,
+        "90.0": 117.3,
+        "95.0": 117.94,
+        "99.0": 118.452,
+        "99.9": 118.5672,
+        "99.99": 118.57872,
+        "100.0": 118.58
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          114.94,
+          118.58,
+          114.72,
+          115.38,
+          114.94
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Mon Sep 01 01:00:11 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "startup.crypto.signverify",
+      "iterationStatistics": {
+        "iterationCount": 5,
+        "mean": 115.712,
+        "standardDeviation": 1.6210860557046318,
+        "minimum": 114.72,
+        "maximum": 118.58,
+        "individualScores": [
+          114.94,
+          118.58,
+          114.72,
+          115.38,
+          114.94
+        ]
+      }
+    }
+  }
+]

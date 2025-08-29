@@ -1,0 +1,54 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.startup.scimark.sor",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 1,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 25.5,
+      "scoreError": 0.0,
+      "scoreConfidence": [
+        25.5,
+        25.5
+      ],
+      "scorePercentiles": {
+        "0.0": 25.5,
+        "50.0": 25.5,
+        "90.0": 25.5,
+        "95.0": 25.5,
+        "99.0": 25.5,
+        "99.9": 25.5,
+        "99.99": 25.5,
+        "100.0": 25.5
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          25.5
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Sat Aug 30 05:26:11 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "startup.scimark.sor"
+    }
+  }
+]

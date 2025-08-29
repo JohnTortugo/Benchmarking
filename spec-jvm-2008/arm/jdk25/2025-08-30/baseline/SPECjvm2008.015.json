@@ -1,0 +1,54 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.startup.mpegaudio",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+32-Nightly mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+32-Nightly mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 1,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 17.2,
+      "scoreError": 0.0,
+      "scoreConfidence": [
+        17.2,
+        17.2
+      ],
+      "scorePercentiles": {
+        "0.0": 17.2,
+        "50.0": 17.2,
+        "90.0": 17.2,
+        "95.0": 17.2,
+        "99.0": 17.2,
+        "99.9": 17.2,
+        "99.99": 17.2,
+        "100.0": 17.2
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          17.2
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Sat Aug 30 05:15:39 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "startup.mpegaudio"
+    }
+  }
+]

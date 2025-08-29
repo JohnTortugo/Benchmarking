@@ -1,11 +1,53 @@
+### Title
+OpenJDK25 vs Graal25 on HotSpot Microbenchmarks @ x86_64
 
+### Operating System
+Linux
 
-## See below the script used to run these benchmarks
+### Platform Architecture
+x86_64
 
+### Benchmark Details
+OpenJDK 25 HotSpot JMH Microbenchmarks
+
+### Baseline Label
+OpenJDK25
+
+### Treatment Label
+GraalVM25
+
+### Baseline VM Details
+openjdk version "25" 2025-07-20
+OpenJDK Runtime Environment Corretto-25.0.0.32.1 (build 25+32-Nightly)
+OpenJDK 64-Bit Server VM Corretto-25.0.0.32.1 (build 25+32-Nightly, mixed mode, sharing)
+
+### Treatment VM Details
+openjdk version "25" 2025-09-16
+OpenJDK Runtime Environment GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01)
+OpenJDK 64-Bit Server VM GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01, mixed mode, sharing)
+
+### Machine Details
+=== RAM ===
+MemTotal:       65112472 kB
+
+=== CPU ===
+CPU(s):              32
+Model name:          AMD EPYC 7R32
+Thread(s) per core:  2
+Core(s) per socket:  16
+Socket(s):           1
+
+=== OS ===
+PRETTY_NAME:         Ubuntu 24.04.2 LTS
+Kernel:              6.14.0-1010-aws
+
+=== AMI ===
+AMI:                 ami-020cba7c55df1f615
+Size:                c5a.8xlarge
+
+### Script used to run the benchmarks
 
 ```
-#!/bin/bash
-
 BASELINE_JAVA="/wf/tools/amazon-corretto-25.0.0.32.1-linux-x64/bin/java"
 TREATMENT_JAVA="/wf/tools/graalvm-community-openjdk-25+25.1/bin/java"
 
@@ -14,16 +56,15 @@ TREATMENT_ARGS="-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMC
 
 JDKMICRO_ARGS=""
 
-BENCHMARKS=(
-"org.openjdk.bench.java.lang.String"   
-"org.openjdk.bench.java.math."         
-"org.openjdk.bench.java.net."          
-"org.openjdk.bench.javax.crypto."      
-"org.openjdk.bench.java.util."         
-"org.openjdk.bench.java.lang.Array"    
-"org.openjdk.bench.java.lang.Integers" 
-"org.openjdk.bench.java.io."           
-"org.openjdk.bench.java.nio.")
+BENCHMARKS=("org.openjdk.bench.java.lang.String"   
+            "org.openjdk.bench.java.math."         
+            "org.openjdk.bench.java.net."          
+            "org.openjdk.bench.javax.crypto."      
+            "org.openjdk.bench.java.util."         
+            "org.openjdk.bench.java.lang.Array"    
+            "org.openjdk.bench.java.lang.Integers" 
+            "org.openjdk.bench.java.io."           
+            "org.openjdk.bench.java.nio.")
 
 
 for bench in ${BENCHMARKS[@]} ; do
@@ -38,7 +79,7 @@ done
 ```
 
 
-This is the OpenJDK "release" file content:
+### OpenJDK "release" file content
 
 ```
 IMPLEMENTOR="Amazon.com Inc."
@@ -54,13 +95,7 @@ SOURCE=".:git:0f7ca194fb71+"
 ```
 
 
-
-
-
-
-
-
-This is the GraalVM "release" file content:
+### GraalVM "release" file content
 
 ```
 IMPLEMENTOR="GraalVM Community"

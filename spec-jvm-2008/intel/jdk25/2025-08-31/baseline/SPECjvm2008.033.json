@@ -1,0 +1,72 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.crypto.aes",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+32-Nightly mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+32-Nightly mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 5,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 467.79200000000003,
+      "scoreError": 0.3582875939800307,
+      "scoreConfidence": [
+        467.4779470770714,
+        468.10605292292865
+      ],
+      "scorePercentiles": {
+        "0.0": 467.36,
+        "50.0": 467.86,
+        "90.0": 468.13,
+        "95.0": 468.22,
+        "99.0": 468.292,
+        "99.9": 468.3082,
+        "99.99": 468.30982,
+        "100.0": 468.31
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          467.36,
+          467.86,
+          467.57,
+          468.31,
+          467.86
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Mon Sep 01 01:46:49 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "crypto.aes",
+      "iterationStatistics": {
+        "iterationCount": 5,
+        "mean": 467.79200000000003,
+        "standardDeviation": 0.3582875939800307,
+        "minimum": 467.36,
+        "maximum": 468.31,
+        "individualScores": [
+          467.36,
+          467.86,
+          467.57,
+          468.31,
+          467.86
+        ]
+      }
+    }
+  }
+]

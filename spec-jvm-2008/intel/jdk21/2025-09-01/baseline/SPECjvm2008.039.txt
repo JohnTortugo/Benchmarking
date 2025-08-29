@@ -1,0 +1,89 @@
+================================
+SPECjvm2008 Peak
+================================
+n/a n/a
+Amazon.com Inc. OpenJDK 64-Bit Server VM
+Tested by: n/a Test date: Mon Sep 01 21:10:21 UTC 2025
+Run is valid, but not compliant
+
+================================
+derby                         2250.24                                 
+Noncompliant composite result: 2250.24 ops/m
+================================
+
+
+Submitter                     n/a                                     
+Submitter URL                 n/a                                     
+SPEC license                  n/a                                     
+Tester                        ubuntu                                  
+Location                      n/a                                     
+Test date:                    Mon Sep 01 21:10:21 UTC 2025            
+OS name                       Linux                                   
+OS available                  n/a                                     
+OS address bits               n/a                                     
+OS tuning                                                             
+Filesystem                    n/a                                     
+Other s/w name                                                        
+Other s/w tuning                                                      
+Other s/w available                                                   
+Vendor                        Amazon.com Inc.                         
+Vendor URL                    https://aws.amazon.com/corretto/        
+JVM name                      OpenJDK 64-Bit Server VM                
+JVM version                   21.0.8+9-LTS mixed mode, sharing        
+JVM available                 n/a                                     
+Java Specification            21                                      
+JVM address bits              64                                      
+JVM initial heap memory       n/a                                     
+JVM maximum heap memory       n/a                                     
+JVM command line              n/a                                     
+JVM command line startup                                              
+JVM launcher startup          default                                 
+Additional JVM tuning                                                 
+JVM class path                /wf/SPECjvm2008/SPECjvm2008.jar         
+JVM boot class path           n/a                                     
+HW vendor                     n/a                                     
+HW vendor's URL               n/a                                     
+HW model                      n/a                                     
+HW available                  n/a                                     
+CPU vendor                    n/a                                     
+CPU vendor's URL              n/a                                     
+CPU name                      n/a                                     
+CPU frequency                 n/a                                     
+# of logical cpus             n/a                                     
+# of chips                    n/a                                     
+# of cores                    n/a                                     
+Cores per chip                n/a                                     
+Threads per core              n/a                                     
+Threading enabled             n/a                                     
+HW address bits               n/a                                     
+Primary cache                 n/a                                     
+Secondary cache               n/a                                     
+Other cache                   n/a                                     
+Memory size                   n/a                                     
+Memory details                n/a                                     
+Other HW details              n/a                                     
+
+Property specjvm.iteration.time must be at least 240 seconds for publication.
+Property specjvm.miniter must be 1 for publication.
+Property specjvm.run.checksum.validation must be true for publication.
+Not a compliant sequence of benchmarks for publication.
+Property specjvm.run.initial.check must be true for publication.
+Property specjvm.maxiter must be 1 for publication.
+
+specjvm.create.html.report=false
+specjvm.benchmark.warmup.time=60
+specjvm.home.dir=/wf/SPECjvm2008
+specjvm.benchmark.threads=16
+
+Details of Runs
+---------------
+
+derby                         warmup         60000          60000          2190.62        2190.62        
+derby                         iteration 1    120000         120000         4285.21        2142.61        
+derby                         iteration 2    120000         120000         4254.21        2127.10        
+derby                         iteration 3    120000         120000         4220.19        2110.10        
+derby                         iteration 4    120000         120000         4353.29        2176.64        
+derby                         iteration 5    120000         120000         4500.49        2250.24        
+
+SPECjvm2008 Version: [SPECjvm2008 1.01 (20090519)]
+Copyright (C) 2008-2025 SPEC. All rights reserved

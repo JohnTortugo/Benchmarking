@@ -1,23 +1,72 @@
-#!/bin/bash
+### Title
+OpenJDK21 vs Graal21 on Renaissance-0.16 @ AArch64
+
+### Operating System
+Linux
+
+### Platform Architecture
+AArch64
+
+### Benchmark Details
+Renaissance-0.16.0-JMH
+
+### Baseline Label
+OpenJDK21
+
+### Treatment Label
+GraalVM21
+
+### Baseline VM Details
+openjdk version "25" 2025-07-20
+OpenJDK Runtime Environment Corretto-25.0.0.32.1 (build 25+32-Nightly)
+OpenJDK 64-Bit Server VM Corretto-25.0.0.32.1 (build 25+32-Nightly, mixed mode, sharing)
+
+### Treatment VM Details
+openjdk version "25" 2025-09-16
+OpenJDK Runtime Environment GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01)
+OpenJDK 64-Bit Server VM GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01, mixed mode, sharing)
+
+### Machine Details
+=== RAM ===
+MemTotal:       131615788 kB
+
+=== CPU ===
+CPU(s):                               64
+Model name:                           Neoverse-V1
+Thread(s) per core:                   1
+Core(s) per socket:                   64
+Socket(s):                            1
+
+=== OS ===
+PRETTY_NAME="Ubuntu 24.04.2 LTS"
+VERSION_ID="24.04"
+Kernel:  uname -r
+
+=== AMI ===
+ami-0c4e709339fa8521a
+
+
+
+### Script used to run the benchmarks
 
 ```
 BASELINE_JAVA="/wf/tools/amazon-corretto-21.0.9.4.1-linux-aarch64/bin/java"
 TREATMENT_JAVA="/wf/tools/graalvm-ce-ristretto-21/bin/java"
 
 COMMON_ARGS="--enable-native-access=ALL-UNNAMED			  				\
-	     --illegal-access=permit --add-exports java.base/jdk.internal.ref=ALL-UNNAMED	\
+	         --illegal-access=permit --add-exports java.base/jdk.internal.ref=ALL-UNNAMED	\
              --add-opens=java.base/java.net=ALL-UNNAMED 	  				\
              --add-opens=java.base/java.lang=ALL-UNNAMED 	  				\
              --add-opens=java.base/sun.nio.ch=ALL-UNNAMED 	  				\
              --add-opens=java.base/java.lang.reflect=ALL-UNNAMED  				\
              --add-opens=java.base/java.lang.invoke=ALL-UNNAMED   				\
-	     --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED 			\
+	         --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED 			\
              --add-opens=java.base/java.util=ALL-UNNAMED 	  				\
              --add-opens=java.base/java.nio=ALL-UNNAMED		  				"
 BASELINE_ARGS="-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:-EnableJVMCI"
 TREATMENT_ARGS="-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI -XX:+UseJVMCICompiler -XX:+UseJVMCINativeLibrary"
 
-JDKMICRO_ARGS="-f 1 -wi 8"
+JDKMICRO_ARGS=""
 
 BENCHMARKS=("JmhAkkaUct"
             "JmhReactors"
@@ -46,8 +95,6 @@ BENCHMARKS=("JmhAkkaUct"
             "JmhFinagleHttp")
 
 
-################ Sets a bunch of configs to make the experiment more producible #####################
-# source no_noise.sh
 
 
 
@@ -55,12 +102,14 @@ for bench in ${BENCHMARKS[@]} ; do
 	################   RUN BASELINE CONFIGURATION   ################################
 	${BASELINE_JAVA} ${BASELINE_ARGS} ${COMMON_ARGS} -jar /wf/tools/renaissance-jmh-0.16.0.jar -rf json -rff baseline-${bench}.json ${JDKMICRO_ARGS} ${bench}
 	 
-	# sleep 120
+	sleep 120
 
 	################   RUN TREATMENT CONFIGURATION   ###############################
 	${TREATMENT_JAVA} ${TREATMENT_ARGS} ${COMMON_ARGS} -jar /wf/tools/renaissance-jmh-0.16.0.jar -rf json -rff treatment-${bench}.json ${JDKMICRO_ARGS} ${bench}
 done
 ```
+
+### OpenJDK "release" file content
 
 ```
 IMPLEMENTOR="Amazon.com Inc."
@@ -74,6 +123,8 @@ OS_ARCH="aarch64"
 OS_NAME="Linux"
 SOURCE=".:git:20640cdde405+"
 ```
+
+### GraalVM "release" file content
 
 ```
 IMPLEMENTOR="Amazon.com Inc."

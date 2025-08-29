@@ -1,0 +1,72 @@
+[
+  {
+    "jmhVersion": "1.37",
+    "benchmark": "spec.jvm2008.crypto.signverify",
+    "mode": "thrpt",
+    "threads": 16,
+    "forks": 1,
+    "jvm": "OpenJDK 64-Bit Server VM",
+    "jvmArgs": [],
+    "jdkVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "vmName": "OpenJDK 64-Bit Server VM",
+    "vmVersion": "25+25-jvmci-b01 mixed mode, sharing",
+    "warmupIterations": 1,
+    "warmupTime": "60s",
+    "warmupBatchSize": 1,
+    "measurementIterations": 5,
+    "measurementTime": "240s",
+    "measurementBatchSize": 1,
+    "primaryMetric": {
+      "score": 472.01,
+      "scoreError": 1.3433354011563812,
+      "scoreConfidence": [
+        470.83251460476146,
+        473.1874853952385
+      ],
+      "scorePercentiles": {
+        "0.0": 469.79,
+        "50.0": 472.19,
+        "90.0": 473.088,
+        "95.0": 473.134,
+        "99.0": 473.1708,
+        "99.9": 473.17908000000006,
+        "99.99": 473.179908,
+        "100.0": 473.18
+      },
+      "scoreUnit": "ops/min",
+      "rawData": [
+        [
+          469.79,
+          472.19,
+          471.94,
+          473.18,
+          472.95
+        ]
+      ]
+    },
+    "secondaryMetrics": {},
+    "specMetadata": {
+      "isValid": true,
+      "testDate": "Mon Sep 01 20:04:28 UTC 2025",
+      "errorMessage": null,
+      "systemInfo": {
+        "os": "Linux"
+      },
+      "originalBenchmarkName": "crypto.signverify",
+      "iterationStatistics": {
+        "iterationCount": 5,
+        "mean": 472.01,
+        "standardDeviation": 1.3433354011563812,
+        "minimum": 469.79,
+        "maximum": 473.18,
+        "individualScores": [
+          469.79,
+          472.19,
+          471.94,
+          473.18,
+          472.95
+        ]
+      }
+    }
+  }
+]

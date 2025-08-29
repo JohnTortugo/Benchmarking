@@ -1,3 +1,52 @@
+### Title
+OpenJDK21 vs Graal21 on Renaissance @ x86_64
+
+### Operating System
+Linux
+
+### Platform Architecture
+x86_64
+
+### Benchmark Details
+Renaissance 0.16.0 JMH
+
+### Baseline Label
+OpenJDK21
+
+### Treatment Label
+GraalVM21
+
+### Baseline VM Details
+openjdk version "21.0.8" 2025-07-15 LTS
+OpenJDK Runtime Environment Corretto-21.0.8.9.1 (build 21.0.8+9-LTS)
+OpenJDK 64-Bit Server VM Corretto-21.0.8.9.1 (build 21.0.8+9-LTS, mixed mode, sharing)
+
+### Treatment VM Details
+openjdk version "21.0.8" 2025-07-15 LTS
+OpenJDK Runtime Environment GraalVM CE 21.0.8+9.1 (build 21.0.8+9-LTS)
+OpenJDK 64-Bit Server VM GraalVM CE 21.0.8+9.1 (build 21.0.8+9-LTS, mixed mode, sharing)
+
+### Machine Details
+=== RAM ===
+MemTotal:       65112472 kB
+
+=== CPU ===
+CPU(s):              32
+Model name:          AMD EPYC 7R32
+Thread(s) per core:  2
+Core(s) per socket:  16
+Socket(s):           1
+
+=== OS ===
+PRETTY_NAME:         Ubuntu 24.04.2 LTS
+Kernel:              6.14.0-1010-aws
+
+=== AMI ===
+AMI:                 ami-020cba7c55df1f615
+Size:                c5a.8xlarge
+
+
+### Script used to run the benchmarks
 
 ```
 #!/bin/bash
@@ -6,13 +55,13 @@ BASELINE_JAVA="/wf/tools/amazon-corretto-21.0.8.9.1-linux-x64/bin/java"
 TREATMENT_JAVA="/wf/tools/graalvm-ce-ristretto-21/bin/java"
 
 COMMON_ARGS="--enable-native-access=ALL-UNNAMED			  				\
-	     --illegal-access=permit --add-exports java.base/jdk.internal.ref=ALL-UNNAMED	\
+	         --illegal-access=permit --add-exports java.base/jdk.internal.ref=ALL-UNNAMED	\
              --add-opens=java.base/java.net=ALL-UNNAMED 	  				\
              --add-opens=java.base/java.lang=ALL-UNNAMED 	  				\
              --add-opens=java.base/sun.nio.ch=ALL-UNNAMED 	  				\
              --add-opens=java.base/java.lang.reflect=ALL-UNNAMED  				\
              --add-opens=java.base/java.lang.invoke=ALL-UNNAMED   				\
-	     --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED 			\
+	         --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED 			\
              --add-opens=java.base/java.util=ALL-UNNAMED 	  				\
              --add-opens=java.base/java.nio=ALL-UNNAMED		  				"
 BASELINE_ARGS="-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:-EnableJVMCI"
@@ -47,8 +96,6 @@ BENCHMARKS=("JmhNaiveBayes"
             "JmhFinagleHttp")
 
 
-################ Sets a bunch of configs to make the experiment more producible #####################
-# source no_noise.sh
 
 
 
@@ -63,6 +110,8 @@ for bench in ${BENCHMARKS[@]} ; do
 done
 ```
 
+### OpenJDK "release" file content
+
 ```
 IMPLEMENTOR="Amazon.com Inc."
 IMPLEMENTOR_VERSION="Corretto-21.0.8.9.1"
@@ -75,6 +124,8 @@ OS_ARCH="x86_64"
 OS_NAME="Linux"
 SOURCE=".:git:878b84f62456+"
 ```
+
+### GraalVM "release" file content
 
 ```
 IMPLEMENTOR="Amazon.com Inc."

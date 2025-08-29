@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenJDK25 vs Graal25 on SPEC-JVM-2008 @ AArch64</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Fallback chart implementation using SVG when Chart.js fails to load
+        let chartJsLoaded = false;
+        
+        // Check if Chart.js loaded successfully
+        window.addEventListener('load', function() {
+            chartJsLoaded = typeof Chart !== 'undefined';
+            if (!chartJsLoaded) {
+                console.log('Chart.js not available, using fallback SVG chart');
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .summary h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .controls input, .controls select {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            text-align: center;
+        }
+        
+        th:hover {
+            background-color: #e9ecef;
+        }
+        
+        th.sorted-asc::after {
+            content: ' ↑';
+            position: absolute;
+            right: 8px;
+        }
+        
+        th.sorted-desc::after {
+            content: ' ↓';
+            position: absolute;
+            right: 8px;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr {
+            cursor: pointer;
+        }
+        
+        tbody tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 20px;
+            border: none;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .modal-title {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .detail-section h3 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .detail-value {
+            color: #6c757d;
+            font-family: monospace;
+        }
+        
+        .comparison-section {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-section h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .metric-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .metric-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: white;
+            border: 1px solid #dee2e6;
+        }
+        
+        .metric-arrow {
+            font-size: 24px;
+            color: #6c757d;
+        }
+        
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-error {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .secondary-metrics {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .secondary-metrics h4 {
+            color: #0c5460;
+            margin-top: 0;
+        }
+        
+        .jvm-args {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .significance-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .significance-yes {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .significance-no {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-improved {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .status-regressed {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .status-unchanged {
+            color: #6c757d;
+        }
+        
+        .number {
+            text-align: right;
+        }
+        
+        .filtered-stats {
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        .benchmark-name {
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OpenJDK25 vs Graal25 on SPEC-JVM-2008 @ AArch64</h1>
+        <p style="text-align: center; color: #6c757d;">Generated on 2025-09-03 21:29:01</p>
+        
+        <div style="text-align: center; margin-bottom: 20px;"><a href="#" onclick="showExperimentDetails(); return false;" style="color: #007bff; text-decoration: none; font-weight: bold;">📋 Experiment Details</a></div>
+        
+        <div class="summary">
+            <h2 id="summaryTitle">Summary Statistics</h2>
+            <div class="stats-grid" id="summaryStats">
+                <div class="stat-card">
+                    <div class="stat-value">32</div>
+                    <div class="stat-label">Total Benchmarks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">7</div>
+                    <div class="stat-label">Improved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">25</div>
+                    <div class="stat-label">Regressed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0.84x</div>
+                    <div class="stat-label">Avg Speedup</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h3>Filters and Controls</h3>
+            <input type="text" id="benchmarkFilter" placeholder="Filter by benchmark name..." onkeyup="filterTable()">
+            <select id="statusFilter" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="improved">Improved</option>
+                <option value="regressed">Regressed</option>
+                <option value="unchanged">Unchanged</option>
+            </select>
+            <select id="modeFilter" onchange="filterTable()">
+                <option value="">All Modes</option>
+                <option value="thrpt">Throughput</option>
+                <option value="avgt">Average Time</option>
+                <option value="sample">Sample Time</option>
+                <option value="ss">Single Shot</option>
+            </select>
+            <select id="significanceFilter" onchange="filterTable()">
+                <option value="">All Significance</option>
+                <option value="significant">Statistically Significant</option>
+                <option value="not_significant">Not Significant</option>
+                <option value="insufficient_data">Insufficient Data (?)</option>
+            </select>
+            <button onclick="resetFilters()">Reset Filters</button>
+            <button onclick="exportFilteredData()">Export Filtered Data</button>
+            <button onclick="showBarChart()">Show Bar Chart</button>
+            
+            <div class="filtered-stats" id="filteredStats"></div>
+        </div>
+        
+        <table id="benchmarkTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)" title="Benchmark Name">Benchmark</th>
+                    <th onclick="sortTable(1)" title="Baseline Score with Error">OpenJDK25</th>
+                    <th onclick="sortTable(2)" title="Treatment Score with Error">GraalVM25</th>
+                    <th onclick="sortTable(3)" title="JMH Mode">Mode</th>
+                    <th onclick="sortTable(4)" title="Measurement Unit">Unit</th>
+                    <th onclick="sortTable(5)" title="Performance Speedup Factor">Speedup</th>
+                    <th onclick="sortTable(6)" title="Statistical Significance">SS</th>
+                </tr>
+            </thead>
+            <tbody id="benchmarkTableBody">
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.crypto.rsa">startup.crypto.rsa</td>
+                    <td class="number">46.5400 ± 1.1012</td>
+                    <td class="number">34.7760 ± 1.4625</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.75x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.scimark.lu">startup.scimark.lu</td>
+                    <td class="number">67.9580 ± 1.3318</td>
+                    <td class="number">38.8760 ± 1.0012</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.57x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.scimark.sor">startup.scimark.sor</td>
+                    <td class="number">36.6660 ± 1.8079</td>
+                    <td class="number">25.6240 ± 0.1346</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.70x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.mpegaudio">mpegaudio</td>
+                    <td class="number">53.6920 ± 0.2351</td>
+                    <td class="number">54.7760 ± 0.3044</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.02x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.helloworld">startup.helloworld</td>
+                    <td class="number">143.1760 ± 6.5720</td>
+                    <td class="number">97.3220 ± 2.3094</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.68x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.crypto.signverify">crypto.signverify</td>
+                    <td class="number">498.6600 ± 0.8668</td>
+                    <td class="number">472.0100 ± 1.3433</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.95x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.sparse.large">scimark.sparse.large</td>
+                    <td class="number">29.0040 ± 0.0826</td>
+                    <td class="number">20.5700 ± 0.0515</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.71x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.serial">startup.serial</td>
+                    <td class="number">18.3280 ± 0.3652</td>
+                    <td class="number">14.4260 ± 0.1483</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.79x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.compress">compress</td>
+                    <td class="number">64.6940 ± 0.1339</td>
+                    <td class="number">66.6200 ± 0.1393</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.03x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.sunflow">sunflow</td>
+                    <td class="number">29.5640 ± 0.0230</td>
+                    <td class="number">33.4060 ± 0.1330</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.13x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.xml.validation">xml.validation</td>
+                    <td class="number">254.2800 ± 1.8408</td>
+                    <td class="number">238.3700 ± 0.7610</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.94x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.sor.small">scimark.sor.small</td>
+                    <td class="number">56.7900 ± 0.5326</td>
+                    <td class="number">37.5000 ± 0.0141</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.66x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.xml.validation">startup.xml.validation</td>
+                    <td class="number">13.5760 ± 0.4167</td>
+                    <td class="number">10.5780 ± 0.1517</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.78x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.fft.small">scimark.fft.small</td>
+                    <td class="number">202.0200 ± 6.2239</td>
+                    <td class="number">153.3380 ± 0.9180</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.76x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.sunflow">startup.sunflow</td>
+                    <td class="number">14.8160 ± 0.3072</td>
+                    <td class="number">13.4520 ± 0.3419</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.91x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.monte_carlo">scimark.monte_carlo</td>
+                    <td class="number">130.4280 ± 0.0804</td>
+                    <td class="number">65.0700 ± 0.1733</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.50x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.compress">startup.compress</td>
+                    <td class="number">37.4800 ± 0.4710</td>
+                    <td class="number">31.3360 ± 0.8618</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.84x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.scimark.fft">startup.scimark.fft</td>
+                    <td class="number">67.0080 ± 1.0247</td>
+                    <td class="number">48.7360 ± 0.7174</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.73x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.lu.large">scimark.lu.large</td>
+                    <td class="number">22.5780 ± 0.0653</td>
+                    <td class="number">12.0780 ± 0.0192</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.53x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.crypto.rsa">crypto.rsa</td>
+                    <td class="number">438.0200 ± 3.7557</td>
+                    <td class="number">439.6900 ± 4.1729</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.00x</td>
+                    <td style="text-align: center;">No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.crypto.aes">crypto.aes</td>
+                    <td class="number">13.0840 ± 0.0365</td>
+                    <td class="number">22.7360 ± 0.0862</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.74x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.sparse.small">scimark.sparse.small</td>
+                    <td class="number">69.1840 ± 1.7556</td>
+                    <td class="number">73.3320 ± 0.9909</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.06x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.scimark.sparse">startup.scimark.sparse</td>
+                    <td class="number">40.9420 ± 2.2894</td>
+                    <td class="number">35.4700 ± 0.8058</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.87x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.derby">derby</td>
+                    <td class="number">167.8040 ± 0.4000</td>
+                    <td class="number">172.1460 ± 0.7984</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-improved" style="text-align: center;">1.03x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.serial">serial</td>
+                    <td class="number">79.3780 ± 0.1148</td>
+                    <td class="number">68.8400 ± 0.1500</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.87x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.scimark.monte_carlo">startup.scimark.monte_carlo</td>
+                    <td class="number">37.1540 ± 0.3754</td>
+                    <td class="number">27.1180 ± 0.5575</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.73x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.lu.small">scimark.lu.small</td>
+                    <td class="number">220.5260 ± 0.3542</td>
+                    <td class="number">110.4360 ± 0.5459</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.50x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.crypto.aes">startup.crypto.aes</td>
+                    <td class="number">18.9280 ± 0.1394</td>
+                    <td class="number">16.0940 ± 0.1178</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.85x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.fft.large">scimark.fft.large</td>
+                    <td class="number">65.4980 ± 0.3116</td>
+                    <td class="number">65.3300 ± 0.3031</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">1.00x</td>
+                    <td style="text-align: center;">No</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.crypto.signverify">startup.crypto.signverify</td>
+                    <td class="number">50.1720 ± 3.5953</td>
+                    <td class="number">36.7340 ± 2.5057</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.73x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.scimark.sor.large">scimark.sor.large</td>
+                    <td class="number">12.8080 ± 0.0630</td>
+                    <td class="number">8.6080 ± 0.0319</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.67x</td>
+                    <td style="text-align: center;">Yes</td>
+                </tr>
+
+                <tr>
+                    <td class="benchmark-name" title="spec.jvm2008.startup.mpegaudio">startup.mpegaudio</td>
+                    <td class="number">16.6300 ± 0.9015</td>
+                    <td class="number">14.5600 ± 1.2161</td>
+                    <td style="text-align: center;">thrpt</td>
+                    <td style="text-align: center;">ops/min</td>
+                    <td class="number status-regressed" style="text-align: center;">0.88x</td>
+                    <td style="text-align: center;">No</td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Benchmark Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody">
+                <!-- Content will be dynamically populated -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Experiment Details Modal -->
+    <div id="experimentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📋 Experiment Details</h2>
+                <span class="close" onclick="closeExperimentModal()">&times;</span>
+            </div>
+            <div id="experimentModalBody">
+                <!-- Content will be dynamically populated -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Modal -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Benchmark Speedup Chart</h2>
+                <span class="close" onclick="closeChartModal()">&times;</span>
+            </div>
+            <div style="height: 400px; position: relative;">
+                <canvas id="benchmarkChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let originalData = [{"benchmark": "spec.jvm2008.startup.crypto.rsa", "mode": "thrpt", "threads": 16, "baseline_score": 46.54, "baseline_error": 1.1012038866622282, "treatment_score": 34.776, "treatment_error": 1.4625081196355794, "unit": "ops/min", "improvement_percent": -25.277180919639015, "speedup": 0.7472281908036099, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 6.42584463262425, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [45.57475223491582, 47.50524776508418], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [33.49405511132499, 36.05794488867502], "secondary_metrics": {}, "params": {}}, "display_name": "startup.crypto.rsa"}, {"benchmark": "spec.jvm2008.startup.scimark.lu", "mode": "thrpt", "threads": 16, "baseline_score": 67.958, "baseline_error": 1.3317544818771945, "treatment_score": 38.876, "treatment_error": 1.0012392321518386, "unit": "ops/min", "improvement_percent": -42.79407869566497, "speedup": 0.5720592130433503, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 17.45462923406902, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [66.79066572807957, 69.12533427192042], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [37.99837511794617, 39.75362488205383], "secondary_metrics": {}, "params": {}}, "display_name": "startup.scimark.lu"}, {"benchmark": "spec.jvm2008.startup.scimark.sor", "mode": "thrpt", "threads": 16, "baseline_score": 36.666, "baseline_error": 1.8079352864524771, "treatment_score": 25.624, "treatment_error": 0.1346476884317003, "unit": "ops/min", "improvement_percent": -30.115093001690934, "speedup": 0.6988490699830906, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 6.0906514430752345, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [35.081274849824105, 38.25072515017589], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [25.505976097336173, 25.742023902663824], "secondary_metrics": {}, "params": {}}, "display_name": "startup.scimark.sor"}, {"benchmark": "spec.jvm2008.mpegaudio", "mode": "thrpt", "threads": 16, "baseline_score": 53.692, "baseline_error": 0.23509572518444477, "treatment_score": 54.775999999999996, "treatment_error": 0.30443390087176625, "unit": "ops/min", "improvement_percent": 2.0189227445429414, "speedup": 1.0201892274454294, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 2.818199914908796, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [53.48592951108905, 53.89807048891095], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [54.50915192037415, 55.04284807962584], "secondary_metrics": {}, "params": {}}, "display_name": "mpegaudio"}, {"benchmark": "spec.jvm2008.startup.helloworld", "mode": "thrpt", "threads": 16, "baseline_score": 143.176, "baseline_error": 6.572014911729891, "treatment_score": 97.322, "treatment_error": 2.309398190005353, "unit": "ops/min", "improvement_percent": -32.026317259875945, "speedup": 0.6797368274012405, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 6.582574713011953, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [137.41537494002603, 148.93662505997395], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [95.29772323473296, 99.34627676526705], "secondary_metrics": {}, "params": {}}, "display_name": "startup.helloworld"}, {"benchmark": "spec.jvm2008.crypto.signverify", "mode": "thrpt", "threads": 16, "baseline_score": 498.66, "baseline_error": 0.8668044762228756, "treatment_score": 472.01, "treatment_error": 1.3433354011563812, "unit": "ops/min", "improvement_percent": -5.344322785063977, "speedup": 0.9465567721493602, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 16.669604055353616, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [497.9002123770421, 499.4197876229579], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [470.83251460476146, 473.1874853952385], "secondary_metrics": {}, "params": {}}, "display_name": "crypto.signverify"}, {"benchmark": "spec.jvm2008.scimark.sparse.large", "mode": "thrpt", "threads": 16, "baseline_score": 29.004, "baseline_error": 0.08264381404557686, "treatment_score": 20.57, "treatment_error": 0.051478150704934764, "unit": "ops/min", "improvement_percent": -29.078747758929808, "speedup": 0.709212522410702, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 86.6222435646231, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [28.931559503038702, 29.0764404969613], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [20.524877411421773, 20.615122588578227], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.sparse.large"}, {"benchmark": "spec.jvm2008.startup.serial", "mode": "thrpt", "threads": 16, "baseline_score": 18.328, "baseline_error": 0.3651985761198969, "treatment_score": 14.426, "treatment_error": 0.14825653442597442, "unit": "ops/min", "improvement_percent": -21.28982976865997, "speedup": 0.7871017023134003, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 9.899918885988251, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [18.007889334135832, 18.648110665864166], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [14.296047417878674, 14.555952582121327], "secondary_metrics": {}, "params": {}}, "display_name": "startup.serial"}, {"benchmark": "spec.jvm2008.compress", "mode": "thrpt", "threads": 16, "baseline_score": 64.694, "baseline_error": 0.13390294993016508, "treatment_score": 66.62, "treatment_error": 0.13928388277184053, "unit": "ops/min", "improvement_percent": 2.9770921569233653, "speedup": 1.0297709215692337, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 9.968442034367898, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [64.57662888941482, 64.81137111058518], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [66.49791229382122, 66.7420877061788], "secondary_metrics": {}, "params": {}}, "display_name": "compress"}, {"benchmark": "spec.jvm2008.sunflow", "mode": "thrpt", "threads": 16, "baseline_score": 29.564, "baseline_error": 0.02302172886644342, "treatment_score": 33.406, "treatment_error": 0.13296616110875767, "unit": "ops/min", "improvement_percent": 12.995535110269243, "speedup": 1.1299553511026925, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 28.470978122946768, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [29.543820564923664, 29.584179435076337], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [33.28945002102102, 33.52254997897898], "secondary_metrics": {}, "params": {}}, "display_name": "sunflow"}, {"benchmark": "spec.jvm2008.xml.validation", "mode": "thrpt", "threads": 16, "baseline_score": 254.28, "baseline_error": 1.8408014558881693, "treatment_score": 238.37, "treatment_error": 0.7610190536379468, "unit": "ops/min", "improvement_percent": -6.256882177127575, "speedup": 0.9374311782287242, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 7.9873141472803795, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [252.66646638212896, 255.89353361787104], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [237.70293738824606, 239.03706261175395], "secondary_metrics": {}, "params": {}}, "display_name": "xml.validation"}, {"benchmark": "spec.jvm2008.scimark.sor.small", "mode": "thrpt", "threads": 16, "baseline_score": 56.79, "baseline_error": 0.532588020894201, "treatment_score": 37.5, "treatment_error": 0.01414213562373316, "unit": "ops/min", "improvement_percent": -33.96724775488642, "speedup": 0.6603275224511358, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 36.20660285832917, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [56.32316601666117, 57.25683398333883], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [37.48760387157214, 37.51239612842786], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.sor.small"}, {"benchmark": "spec.jvm2008.startup.xml.validation", "mode": "thrpt", "threads": 16, "baseline_score": 13.576, "baseline_error": 0.41668933271683356, "treatment_score": 10.578, "treatment_error": 0.1517234326002415, "unit": "ops/min", "improvement_percent": -22.083087802003543, "speedup": 0.7791691219799646, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 6.760590847640774, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [13.210755696006085, 13.941244303993916], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [10.44500854764309, 10.71099145235691], "secondary_metrics": {}, "params": {}}, "display_name": "startup.xml.validation"}, {"benchmark": "spec.jvm2008.scimark.fft.small", "mode": "thrpt", "threads": 16, "baseline_score": 202.02, "baseline_error": 6.223897492729141, "treatment_score": 153.338, "treatment_error": 0.9179705877641203, "unit": "ops/min", "improvement_percent": -24.097614097614102, "speedup": 0.7590238590238589, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 7.738073957140226, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [196.56451331153673, 207.4754866884633], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [152.5333633028503, 154.1426366971497], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.fft.small"}, {"benchmark": "spec.jvm2008.startup.sunflow", "mode": "thrpt", "threads": 16, "baseline_score": 14.816, "baseline_error": 0.3072132809629166, "treatment_score": 13.452, "treatment_error": 0.34186254547697953, "unit": "ops/min", "improvement_percent": -9.20626349892009, "speedup": 0.9079373650107991, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 2.9676727678106207, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [14.546715686309062, 15.08528431369094], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [13.152344266866125, 13.751655733133875], "secondary_metrics": {}, "params": {}}, "display_name": "startup.sunflow"}, {"benchmark": "spec.jvm2008.scimark.monte_carlo", "mode": "thrpt", "threads": 16, "baseline_score": 130.428, "baseline_error": 0.08043631020876081, "treatment_score": 65.07000000000001, "treatment_error": 0.17334935823359404, "unit": "ops/min", "improvement_percent": -50.11040574109853, "speedup": 0.4988959425890147, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 342.00571996139524, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [130.35749446546546, 130.49850553453453], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [64.91805258804443, 65.22194741195558], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.monte_carlo"}, {"benchmark": "spec.jvm2008.startup.compress", "mode": "thrpt", "threads": 16, "baseline_score": 37.48, "baseline_error": 0.4710095540432256, "treatment_score": 31.336, "treatment_error": 0.8617598273300974, "unit": "ops/min", "improvement_percent": -16.392742796157947, "speedup": 0.8360725720384206, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 6.256113135117491, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [37.06714192269013, 37.89285807730986], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [30.580634206758077, 32.09136579324192], "secondary_metrics": {}, "params": {}}, "display_name": "startup.compress"}, {"benchmark": "spec.jvm2008.startup.scimark.fft", "mode": "thrpt", "threads": 16, "baseline_score": 67.008, "baseline_error": 1.024680437990303, "treatment_score": 48.736, "treatment_error": 0.7174468621438118, "unit": "ops/min", "improvement_percent": -27.2683858643744, "speedup": 0.727316141356256, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 14.607320063939646, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [66.10982799509225, 67.90617200490775], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [48.10713009803298, 49.36486990196701], "secondary_metrics": {}, "params": {}}, "display_name": "startup.scimark.fft"}, {"benchmark": "spec.jvm2008.scimark.lu.large", "mode": "thrpt", "threads": 16, "baseline_score": 22.578, "baseline_error": 0.06534523701081878, "treatment_score": 12.078, "treatment_error": 0.019235384061670933, "unit": "ops/min", "improvement_percent": -46.50544778102578, "speedup": 0.5349455221897422, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 154.1453076226086, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [22.520722374350886, 22.635277625649113], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [12.061139442476597, 12.094860557523402], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.lu.large"}, {"benchmark": "spec.jvm2008.crypto.rsa", "mode": "thrpt", "threads": 16, "baseline_score": 438.02, "baseline_error": 3.7557156441882067, "treatment_score": 439.69, "treatment_error": 4.172888687707843, "unit": "ops/min", "improvement_percent": 0.3812611296287877, "speedup": 1.003812611296288, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.29746398364263826, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [434.7279700900508, 441.31202990994916], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [436.03230179484416, 443.34769820515584], "secondary_metrics": {}, "params": {}}, "display_name": "crypto.rsa"}, {"benchmark": "spec.jvm2008.crypto.aes", "mode": "thrpt", "threads": 16, "baseline_score": 13.084, "baseline_error": 0.03646916505762126, "treatment_score": 22.736, "treatment_error": 0.08619744775803873, "unit": "ops/min", "improvement_percent": 73.76948945276675, "speedup": 1.7376948945276676, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 103.12530835708803, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [13.05203336739661, 13.115966632603389], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [22.660444605751806, 22.811555394248195], "secondary_metrics": {}, "params": {}}, "display_name": "crypto.aes"}, {"benchmark": "spec.jvm2008.scimark.sparse.small", "mode": "thrpt", "threads": 16, "baseline_score": 69.184, "baseline_error": 1.755599612667993, "treatment_score": 73.332, "treatment_error": 0.9908683060831053, "unit": "ops/min", "improvement_percent": 5.995605920444028, "speedup": 1.0599560592044404, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.05", "t_statistic": 2.0576171435433257, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [67.64514909052241, 70.72285090947759], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [72.46346563545245, 74.20053436454754], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.sparse.small"}, {"benchmark": "spec.jvm2008.startup.scimark.sparse", "mode": "thrpt", "threads": 16, "baseline_score": 40.942, "baseline_error": 2.2894147723817992, "treatment_score": 35.47, "treatment_error": 0.8058225611137977, "unit": "ops/min", "improvement_percent": -13.365248400175862, "speedup": 0.8663475159982413, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.05", "t_statistic": 2.2545509564607618, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [38.93523947258274, 42.948760527417264], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [34.76366538241425, 36.176334617585745], "secondary_metrics": {}, "params": {}}, "display_name": "startup.scimark.sparse"}, {"benchmark": "spec.jvm2008.derby", "mode": "thrpt", "threads": 16, "baseline_score": 167.804, "baseline_error": 0.3999749992186988, "treatment_score": 172.14600000000002, "treatment_error": 0.7983921342297888, "unit": "ops/min", "improvement_percent": 2.587542609234591, "speedup": 1.025875426092346, "status": "improved", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 4.862380939204435, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [167.45340645527907, 168.15459354472094], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [171.44617843874315, 172.84582156125688], "secondary_metrics": {}, "params": {}}, "display_name": "derby"}, {"benchmark": "spec.jvm2008.serial", "mode": "thrpt", "threads": 16, "baseline_score": 79.378, "baseline_error": 0.11476062042356068, "treatment_score": 68.84, "treatment_error": 0.1499999999999993, "unit": "ops/min", "improvement_percent": -13.27571871299352, "speedup": 0.8672428128700648, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 55.79645916741435, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [79.2774078810244, 79.4785921189756], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [68.70851920292301, 68.97148079707699], "secondary_metrics": {}, "params": {}}, "display_name": "serial"}, {"benchmark": "spec.jvm2008.startup.scimark.monte_carlo", "mode": "thrpt", "threads": 16, "baseline_score": 37.154, "baseline_error": 0.37540644640176324, "treatment_score": 27.118, "treatment_error": 0.5575123317021792, "unit": "ops/min", "improvement_percent": -27.011896431070692, "speedup": 0.7298810356892931, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 14.93177963825704, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [36.82494174132838, 37.483058258671626], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [26.629318894983648, 27.60668110501635], "secondary_metrics": {}, "params": {}}, "display_name": "startup.scimark.monte_carlo"}, {"benchmark": "spec.jvm2008.scimark.lu.small", "mode": "thrpt", "threads": 16, "baseline_score": 220.526, "baseline_error": 0.3542315626818192, "treatment_score": 110.436, "treatment_error": 0.5459212397406833, "unit": "ops/min", "improvement_percent": -49.92155120031198, "speedup": 0.5007844879968802, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 169.167151675542, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [220.21550234525847, 220.83649765474155], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [109.95747893505093, 110.91452106494908], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.lu.small"}, {"benchmark": "spec.jvm2008.startup.crypto.aes", "mode": "thrpt", "threads": 16, "baseline_score": 18.928, "baseline_error": 0.13935566009315867, "treatment_score": 16.094, "treatment_error": 0.11781341180018545, "unit": "ops/min", "improvement_percent": -14.972527472527469, "speedup": 0.8502747252747253, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 15.530224334112738, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [18.80584937822508, 19.05015062177492], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [15.990731991401017, 16.197268008598986], "secondary_metrics": {}, "params": {}}, "display_name": "startup.crypto.aes"}, {"benchmark": "spec.jvm2008.scimark.fft.large", "mode": "thrpt", "threads": 16, "baseline_score": 65.498, "baseline_error": 0.31164081889251627, "treatment_score": 65.33, "treatment_error": 0.3030676492138345, "unit": "ops/min", "improvement_percent": -0.2564963815689126, "speedup": 0.9974350361843108, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 0.3864673864637738, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [65.22483477820192, 65.77116522179809], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [65.0643494927541, 65.59565050724589], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.fft.large"}, {"benchmark": "spec.jvm2008.startup.crypto.signverify", "mode": "thrpt", "threads": 16, "baseline_score": 50.172, "baseline_error": 3.5953191791550307, "treatment_score": 36.734, "treatment_error": 2.5056995031328073, "unit": "ops/min", "improvement_percent": -26.783863509527215, "speedup": 0.7321613649047278, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 3.066402617980222, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [47.02056379052343, 53.32343620947656], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [34.53765754728458, 38.93034245271542], "secondary_metrics": {}, "params": {}}, "display_name": "startup.crypto.signverify"}, {"benchmark": "spec.jvm2008.scimark.sor.large", "mode": "thrpt", "threads": 16, "baseline_score": 12.808, "baseline_error": 0.063007936008093, "treatment_score": 8.608, "treatment_error": 0.031937438845342864, "unit": "ops/min", "improvement_percent": -32.79200499687695, "speedup": 0.6720799500312306, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": true, "confidence_level": "p < 0.01", "t_statistic": 59.45645583349709, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [12.752771109009867, 12.863228890990133], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [8.580005600560112, 8.63599439943989], "secondary_metrics": {}, "params": {}}, "display_name": "scimark.sor.large"}, {"benchmark": "spec.jvm2008.startup.mpegaudio", "mode": "thrpt", "threads": 16, "baseline_score": 16.63, "baseline_error": 0.9014710200555539, "treatment_score": 14.56, "treatment_error": 1.216100324808772, "unit": "ops/min", "improvement_percent": -12.44738424533974, "speedup": 0.8755261575466026, "status": "regressed", "higher_is_better": true, "baseline_vm": "OpenJDK 64-Bit Server VM", "treatment_vm": "OpenJDK 64-Bit Server VM", "baseline_jdk": "", "treatment_jdk": "", "statistical_significance": {"is_significant": false, "confidence_level": "p \u2265 0.05", "t_statistic": 1.3674318040849653, "insufficient_data": false}, "baseline_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+32-Nightly mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [15.839825811608604, 17.420174188391396], "secondary_metrics": {}, "params": {}}, "treatment_details": {"jvm": "OpenJDK 64-Bit Server VM", "jvm_args": [], "jdk": "", "vm_name": "OpenJDK 64-Bit Server VM", "vm_version": "25+25-jvmci-b01 mixed mode, sharing", "forks": 1, "warmup_iterations": 1, "warmup_time": "60s", "measurement_iterations": 5, "measurement_time": "240s", "score_confidence": [13.494041066457061, 15.62595893354294], "secondary_metrics": {}, "params": {}}, "display_name": "startup.mpegaudio"}];
+        let filteredData = [...originalData];
+        let currentSort = {column: -1, direction: 'asc'};
+        let experimentDetails = {"Title": "OpenJDK25 vs Graal25 on SPEC-JVM-2008 @ AArch64", "Platform OS": "Linux", "Platform Architecture": "AArch64", "Benchmark Details": "SPEC-JVM-2008", "Baseline Label": "OpenJDK25", "Treatment Label": "GraalVM25", "Baseline VM Details": "openjdk version \"25\" 2025-07-20\nOpenJDK Runtime Environment Corretto-25.0.0.32.1 (build 25+32-Nightly)\nOpenJDK 64-Bit Server VM Corretto-25.0.0.32.1 (build 25+32-Nightly, mixed mode, sharing)", "Treatment VM Details": "openjdk version \"25\" 2025-09-16\nOpenJDK Runtime Environment GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01)\nOpenJDK 64-Bit Server VM GraalVM CE 25-dev+25.1 (build 25+25-jvmci-b01, mixed mode, sharing)", "Machine Details": "=== RAM ===\nMemTotal:       131615788 kB\n<br>\n=== CPU ===\nCPU(s):                               64\nModel name:                           Neoverse-V1\nThread(s) per core:                   1\nCore(s) per socket:                   64\nSocket(s):                            1\n<br>\n=== OS ===\nPRETTY_NAME=\"Ubuntu 24.04.2 LTS\"\nVERSION_ID=\"24.04\"\nKernel:  uname -r\n<br>\n=== AMI ===\nami-0c4e709339fa8521a", "Additional Details": "Each benchmark was run 5 times.", "Script used to run the benchmarks": "<pre><code>BASELINE_JAVA=&quot;/wf/tools/amazon-corretto-25.0.0.32.1-linux-x64/bin/java&quot;\nTREATMENT_JAVA=&quot;/wf/tools/graalvm-community-openjdk-25+25.1/bin/java&quot;\n\nCOMMON_ARGS=&quot;--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED&quot;\nBASELINE_ARGS=&quot;-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:-EnableJVMCI&quot;\nTREATMENT_ARGS=&quot;-Xms16G -Xmx16G -XX:+UnlockExperimentalVMOptions -XX:+EnableJVMCI -XX:+UseJVMCICompiler -XX:+UseJVMCINativeLibrary&quot;\n\nJDKMICRO_ARGS=&quot;-wt 60 -it 120 -i 5 -bt 16 -Dspecjvm.home.dir=/wf/SPECjvm2008 -ikv -ict -crf true -ctf true -chf false&quot;\n\nBENCHMARKS=(&quot;startup.helloworld&quot;\n\t&quot;startup.compress&quot;\n\t&quot;startup.crypto.aes&quot;\n\t&quot;startup.crypto.rsa&quot;\n\t&quot;startup.crypto.signverify&quot;\n\t&quot;startup.mpegaudio&quot;\n\t&quot;startup.scimark.fft&quot;\n\t&quot;startup.scimark.lu&quot;\n\t&quot;startup.scimark.monte_carlo&quot;\n\t&quot;startup.scimark.sor&quot;\n\t&quot;startup.scimark.sparse&quot;\n\t&quot;startup.serial&quot;\n\t&quot;startup.sunflow&quot;\n\t&quot;startup.xml.transform&quot;\n\t&quot;startup.xml.validation&quot;\n\t&quot;compress&quot;\n\t&quot;crypto.aes&quot;\n\t&quot;crypto.rsa&quot;\n\t&quot;crypto.signverify&quot;\n\t&quot;derby&quot;\n\t&quot;mpegaudio&quot;\n\t&quot;scimark.fft.large&quot;\n\t&quot;scimark.lu.large&quot;\n\t&quot;scimark.sor.large&quot;\n\t&quot;scimark.sparse.large&quot;\n\t&quot;scimark.fft.small&quot;\n\t&quot;scimark.lu.small&quot;\n\t&quot;scimark.sor.small&quot;\n\t&quot;scimark.sparse.small&quot;\n\t&quot;scimark.monte_carlo&quot;\n\t&quot;serial&quot;\n\t&quot;sunflow&quot;\n\t&quot;xml.transform&quot;\n\t&quot;xml.validation&quot;)\n\n\nfor bench in ${BENCHMARKS[@]} ; do\n\t################   RUN BASELINE CONFIGURATION   ################################\n\t${BASELINE_JAVA}  ${BASELINE_ARGS}  ${COMMON_ARGS} -jar /wf/SPECjvm2008/SPECjvm2008.jar ${JDKMICRO_ARGS} ${bench}\n\n\tsleep 120\n\n\t################   RUN TREATMENT CONFIGURATION   ###############################\n\t${TREATMENT_JAVA} ${TREATMENT_ARGS} ${COMMON_ARGS} -jar /wf/SPECjvm2008/SPECjvm2008.jar ${JDKMICRO_ARGS} ${bench}\ndone</code></pre>", "OpenJDK \"release\" file content": "<pre><code>IMPLEMENTOR=&quot;Amazon.com Inc.&quot;\nIMPLEMENTOR_VERSION=&quot;Corretto-25.0.0.32.1&quot;\nJAVA_RUNTIME_VERSION=&quot;25+32-Nightly&quot;\nJAVA_VERSION=&quot;25&quot;\nJAVA_VERSION_DATE=&quot;2025-07-20&quot;\nLIBC=&quot;gnu&quot;\nMODULES=&quot;java.base java.compiler java.datatransfer java.xml java.prefs java.desktop java.instrument java.logging java.management java.security.sasl java.naming java.rmi java.management.rmi java.net.http java.scripting java.security.jgss java.transaction.xa java.sql java.sql.rowset java.xml.crypto java.se java.smartcardio jdk.accessibility jdk.internal.jvmstat jdk.attach jdk.charsets jdk.internal.opt jdk.zipfs jdk.compiler jdk.crypto.cryptoki jdk.crypto.ec jdk.dynalink jdk.internal.ed jdk.editpad jdk.internal.vm.ci jdk.graal.compiler jdk.graal.compiler.management jdk.hotspot.agent jdk.httpserver jdk.incubator.vector jdk.internal.le jdk.internal.md jdk.jartool jdk.javadoc jdk.jcmd jdk.management jdk.management.agent jdk.jconsole jdk.jdeps jdk.jdwp.agent jdk.jdi jdk.jfr jdk.jlink jdk.jpackage jdk.jshell jdk.jsobject jdk.jstatd jdk.localedata jdk.management.jfr jdk.naming.dns jdk.naming.rmi jdk.net jdk.nio.mapmode jdk.sctp jdk.security.auth jdk.security.jgss jdk.unsupported jdk.unsupported.desktop jdk.xml.dom&quot;\nOS_ARCH=&quot;aarch64&quot;\nOS_NAME=&quot;Linux&quot;\nSOURCE=&quot;.:git:0f7ca194fb71+&quot;</code></pre>", "GraalVM \"release\" file content": "<pre><code>IMPLEMENTOR=&quot;GraalVM Community&quot;\nJAVA_RUNTIME_VERSION=&quot;25+25-jvmci-b01&quot;\nJAVA_VERSION=&quot;25&quot;\nJAVA_VERSION_DATE=&quot;2025-09-16&quot;\nLIBC=&quot;gnu&quot;\nMODULES=&quot;java.base java.logging jdk.internal.vm.ci org.graalvm.collections java.management jdk.management jdk.unsupported org.graalvm.truffle.compiler org.graalvm.word jdk.graal.compiler com.oracle.graal.graal_enterprise org.graalvm.nativeimage com.oracle.svm.enterprise.truffle com.oracle.svm.extraimage_enterprise com.oracle.svm.svm_enterprise com.oracle.svm_enterprise.ml_dataset com.oracle.truffle.enterprise.svm java.compiler java.datatransfer java.xml java.prefs java.desktop java.instrument java.security.sasl java.naming java.rmi java.management.rmi java.net.http java.scripting java.security.jgss java.transaction.xa java.sql java.sql.rowset java.xml.crypto java.se java.smartcardio jdk.accessibility jdk.internal.jvmstat jdk.attach jdk.charsets jdk.internal.opt jdk.zipfs jdk.compiler jdk.crypto.cryptoki jdk.crypto.ec jdk.dynalink jdk.internal.ed jdk.editpad jdk.graal.compiler.management jdk.hotspot.agent jdk.httpserver jdk.incubator.vector jdk.internal.le jdk.internal.md jdk.jartool jdk.javadoc jdk.jcmd jdk.management.agent jdk.jconsole jdk.jdeps jdk.jdwp.agent jdk.jdi jdk.jfr jdk.jlink jdk.jpackage jdk.jshell jdk.jsobject jdk.jstatd jdk.localedata jdk.management.jfr jdk.naming.dns jdk.naming.rmi jdk.net jdk.nio.mapmode jdk.sctp jdk.security.auth jdk.security.jgss jdk.unsupported.desktop jdk.xml.dom org.graalvm.extraimage.builder org.graalvm.extraimage.librarysupport org.graalvm.nativeimage.libgraal org.graalvm.webimage.api&quot;\nOS_ARCH=&quot;aarch64&quot;\nOS_NAME=&quot;Linux&quot;\nSOURCE=&quot;.:git:5f461e36d9bb+ labsjdk-builder:b9a413c20b6de505462af407eb83a662a09e7509 compiler:1ec3a06da275663e8332428bdb9fda0f08aedb30 espresso-shared:1ec3a06da275663e8332428bdb9fda0f08aedb30 regex:1ec3a06da275663e8332428bdb9fda0f08aedb30 sdk:1ec3a06da275663e8332428bdb9fda0f08aedb30 substratevm:1ec3a06da275663e8332428bdb9fda0f08aedb30 truffle:1ec3a06da275663e8332428bdb9fda0f08aedb30 vm:1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;\nGRAALVM_VERSION=&quot;25.0.0-dev&quot;\nCOMMIT_INFO={&quot;compiler&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}, &quot;espresso-shared&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}, &quot;regex&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}, &quot;sdk&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}, &quot;substratevm&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}, &quot;truffle&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}, &quot;vm&quot;: {&quot;commit.committer&quot;: &quot;Paul W\\u00f6gerer &lt;paul.woegerer@oracle.com&gt;&quot;, &quot;commit.committer-ts&quot;: 1749567040, &quot;commit.rev&quot;: &quot;1ec3a06da275663e8332428bdb9fda0f08aedb30&quot;}}</code></pre>"};
+        
+        function filterTable() {
+            const benchmarkFilter = document.getElementById('benchmarkFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const modeFilter = document.getElementById('modeFilter').value;
+            const significanceFilter = document.getElementById('significanceFilter').value;
+            
+            filteredData = originalData.filter(row => {
+                const matchesBenchmark = row.benchmark.toLowerCase().includes(benchmarkFilter);
+                const matchesStatus = !statusFilter || row.status === statusFilter;
+                const matchesMode = !modeFilter || row.mode === modeFilter;
+                const matchesSignificance = !significanceFilter || 
+                    (significanceFilter === 'significant' && row.statistical_significance.is_significant) ||
+                    (significanceFilter === 'not_significant' && !row.statistical_significance.is_significant) ||
+                    (significanceFilter === 'insufficient_data' && row.statistical_significance.insufficient_data);
+                
+                return matchesBenchmark && matchesStatus && matchesMode && matchesSignificance;
+            });
+            
+            updateTable();
+            updateFilteredStats();
+        }
+        
+        function updateTable() {
+            const tbody = document.getElementById('benchmarkTableBody');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach((data, index) => {
+                const statusClass = `status-${data.status}`;
+                
+                // Handle insufficient data case
+                let significanceDisplay;
+                if (data.statistical_significance.insufficient_data) {
+                    significanceDisplay = '?';
+                } else {
+                    significanceDisplay = data.statistical_significance.is_significant ? 'Yes' : 'No';
+                }
+                
+                const row = document.createElement('tr');
+                row.onclick = () => showBenchmarkDetails(data);
+                row.innerHTML = `
+                    <td class="benchmark-name" title="${data.benchmark}">${data.display_name || data.benchmark}</td>
+                    <td class="number">${data.baseline_score.toFixed(4)} ± ${data.baseline_error.toFixed(4)}</td>
+                    <td class="number">${data.treatment_score.toFixed(4)} ± ${data.treatment_error.toFixed(4)}</td>
+                    <td style="text-align: center;">${data.mode}</td>
+                    <td style="text-align: center;">${data.unit}</td>
+                    <td class="number ${statusClass}" style="text-align: center;">${data.speedup.toFixed(2)}x</td>
+                    <td style="text-align: center;">${significanceDisplay}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function updateFilteredStats() {
+            if (filteredData.length === 0) {
+                document.getElementById('filteredStats').innerHTML = '<strong>No data matches current filters</strong>';
+                document.getElementById('summaryTitle').textContent = 'Summary Statistics';
+                return;
+            }
+            
+            const improvements = filteredData.map(d => d.improvement_percent);
+            const speedups = filteredData.map(d => d.speedup);
+            
+            const avgImprovement = improvements.reduce((a, b) => a + b, 0) / improvements.length;
+            const medianImprovement = improvements.slice().sort((a, b) => a - b)[Math.floor(improvements.length / 2)];
+            const avgSpeedup = speedups.reduce((a, b) => a + b, 0) / speedups.length;
+            const medianSpeedup = speedups.slice().sort((a, b) => a - b)[Math.floor(speedups.length / 2)];
+            
+            const improvedCount = filteredData.filter(d => d.status === 'improved').length;
+            const regressedCount = filteredData.filter(d => d.status === 'regressed').length;
+            const unchangedCount = filteredData.filter(d => d.status === 'unchanged').length;
+            
+            // Update summary statistics if filtered
+            if (filteredData.length < originalData.length) {
+                document.getElementById('summaryTitle').textContent = 'Summary Statistics (Filtered)';
+                document.getElementById('summaryStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${filteredData.length}</div>
+                        <div class="stat-label">Total Benchmarks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${improvedCount}</div>
+                        <div class="stat-label">Improved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${regressedCount}</div>
+                        <div class="stat-label">Regressed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgSpeedup.toFixed(2)}x</div>
+                        <div class="stat-label">Avg Speedup</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('summaryTitle').textContent = 'Summary Statistics';
+                // Reset to original values
+                document.getElementById('summaryStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">32</div>
+                        <div class="stat-label">Total Benchmarks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">7</div>
+                        <div class="stat-label">Improved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">25</div>
+                        <div class="stat-label">Regressed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0.84x</div>
+                        <div class="stat-label">Avg Speedup</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('filteredStats').innerHTML = `
+                <strong>Filtered Results:</strong> 
+                ${filteredData.length} benchmarks | 
+                ${improvedCount} improved | 
+                ${regressedCount} regressed | 
+                ${unchangedCount} unchanged | 
+                Avg: ${avgImprovement.toFixed(2)}% | 
+                Median: ${medianImprovement.toFixed(2)}% | 
+                Avg Speedup: ${avgSpeedup.toFixed(2)}x
+            `;
+        }
+        
+        function sortTable(columnIndex) {
+            const headers = document.querySelectorAll('th');
+            
+            // Remove existing sort classes
+            headers.forEach(header => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Determine sort direction
+            const direction = (currentSort.column === columnIndex && currentSort.direction === 'asc') ? 'desc' : 'asc';
+            currentSort = {column: columnIndex, direction: direction};
+            
+            // Add sort class to current header
+            headers[columnIndex].classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            
+            // Sort the data
+            filteredData.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(columnIndex) {
+                    case 0: aVal = a.benchmark; bVal = b.benchmark; break;
+                    case 1: aVal = a.baseline_score; bVal = b.baseline_score; break;
+                    case 2: aVal = a.treatment_score; bVal = b.treatment_score; break;
+                    case 3: aVal = a.mode; bVal = b.mode; break;
+                    case 4: aVal = a.unit; bVal = b.unit; break;
+                    case 5: aVal = a.speedup; bVal = b.speedup; break;
+                    case 6: aVal = a.statistical_significance.is_significant; bVal = b.statistical_significance.is_significant; break;
+                    default: return 0;
+                }
+                
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                } else if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+                    return direction === 'asc' ? (aVal ? 1 : 0) - (bVal ? 1 : 0) : (bVal ? 1 : 0) - (aVal ? 1 : 0);
+                } else {
+                    const comparison = String(aVal).localeCompare(String(bVal));
+                    return direction === 'asc' ? comparison : -comparison;
+                }
+            });
+            
+            updateTable();
+        }
+        
+        function resetFilters() {
+            document.getElementById('benchmarkFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('modeFilter').value = '';
+            document.getElementById('significanceFilter').value = '';
+            filteredData = [...originalData];
+            updateTable();
+            updateFilteredStats();
+        }
+        
+        function exportFilteredData() {
+            const csvContent = [
+                ['Benchmark', 'Mode', 'Threads', 'OpenJDK25 Score', 'GraalVM25 Score', 'Unit', 'Improvement %', 'Speedup', 'Status'],
+                ...filteredData.map(d => [
+                    d.benchmark, d.mode, d.threads, d.baseline_score, d.treatment_score, 
+                    d.unit, d.improvement_percent, d.speedup, d.status
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'filtered_benchmark_results.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function showExperimentDetails() {
+            if (!experimentDetails) {
+                alert('No experiment details available');
+                return;
+            }
+            
+            const modal = document.getElementById('experimentModal');
+            const modalBody = document.getElementById('experimentModalBody');
+            
+            let detailsHtml = '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff;">';
+            
+            Object.entries(experimentDetails).forEach(([key, value], index) => {
+                if (index > 0) {
+                    detailsHtml += '<hr style="margin: 20px 0; border: none; border-top: 1px solid #dee2e6;">';
+                }
+                detailsHtml += `
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: #007bff; margin: 0 0 10px 0; font-size: 16px;">${key}</h4>
+                        <div style="background-color: white; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto;">${value.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            });
+            
+            detailsHtml += '</div>';
+            modalBody.innerHTML = detailsHtml;
+            modal.style.display = 'block';
+        }
+        
+        function closeExperimentModal() {
+            document.getElementById('experimentModal').style.display = 'none';
+        }
+        
+        function showBenchmarkDetails(data) {
+            // Implementation for benchmark details modal
+            const modal = document.getElementById('detailModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            modalTitle.textContent = data.benchmark;
+            
+            const statusClass = `status-${data.status}`;
+            
+            // Handle insufficient data case for significance display
+            let significanceClass, significanceText;
+            if (data.statistical_significance.insufficient_data) {
+                significanceClass = 'significance-no';
+                significanceText = '?';
+            } else {
+                significanceClass = data.statistical_significance.is_significant ? 'significance-yes' : 'significance-no';
+                significanceText = data.statistical_significance.is_significant ? 'Yes' : 'No';
+            }
+            
+            modalBody.innerHTML = `
+                <div class="comparison-section">
+                    <h3>Performance Comparison</h3>
+                    <div class="metric-comparison">
+                        <div class="metric-box">
+                            <div class="metric-value">${data.baseline_score.toFixed(4)}</div>
+                            <div class="metric-error">± ${data.baseline_error.toFixed(4)}</div>
+                            <div class="metric-label">OpenJDK25 (${data.baseline_vm})</div>
+                        </div>
+                        <div class="metric-arrow">→</div>
+                        <div class="metric-box">
+                            <div class="metric-value">${data.treatment_score.toFixed(4)}</div>
+                            <div class="metric-error">± ${data.treatment_error.toFixed(4)}</div>
+                            <div class="metric-label">GraalVM25 (${data.treatment_vm})</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin: 15px 0;">
+                        <strong>Unit:</strong> ${data.unit} | 
+                        <strong class="${statusClass}">Improvement:</strong> <span class="${statusClass}">${data.improvement_percent.toFixed(2)}%</span> | 
+                        <strong class="${statusClass}">Speedup:</strong> <span class="${statusClass}">${data.speedup.toFixed(2)}x</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <strong>Statistical Significance:</strong> 
+                        <span class="significance-badge ${significanceClass}">${significanceText}</span>
+                        <span style="margin-left: 10px;">(${data.statistical_significance.confidence_level})</span>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        function showBarChart() {
+            const modal = document.getElementById('chartModal');
+            
+            // Check if Chart.js is available
+            if (typeof Chart !== 'undefined') {
+                // Use Chart.js implementation
+                showChartJsBarChart();
+            } else {
+                // Use fallback SVG implementation
+                showSvgBarChart();
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // --------- PATCHED VERSION: proper plugin registration + EPS guards ---------
+        function showChartJsBarChart() {
+            const canvas = document.getElementById('benchmarkChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear any existing chart
+            if (window.benchmarkChartInstance) {
+                window.benchmarkChartInstance.destroy();
+            }
+            
+            // Prepare data for the chart
+            const labels = filteredData.map(d => d.display_name || d.benchmark);
+            const speedups = filteredData.map(d => d.speedup);
+            const colors = filteredData.map(d => {
+                if (d.status === 'improved') return '#0066cc';  // Blue for improved (colorblind friendly)
+                if (d.status === 'regressed') return '#ff6600'; // Orange for regressed (colorblind friendly)
+                return '#6c757d';
+            });
+            
+            // Prepare confidence interval data for error bars with EPS to avoid /0
+            const EPS = 1e-12;
+            const errorBars = filteredData.map((d) => {
+                const baselineConf = d.baseline_details.score_confidence || [];
+                const treatmentConf = d.treatment_details.score_confidence || [];
+                
+                if (baselineConf.length === 2 && treatmentConf.length === 2) {
+                    const bLo = Math.max(baselineConf[0], EPS);
+                    const bHi = Math.max(baselineConf[1], EPS);
+                    const tLo = Math.max(treatmentConf[0], EPS);
+                    const tHi = Math.max(treatmentConf[1], EPS);
+                    
+                    let minSpeedup, maxSpeedup;
+                    if (d.higher_is_better) {
+                        // For throughput: speedup = treatment / baseline
+                        minSpeedup = tLo / bHi; // min treatment / max baseline
+                        maxSpeedup = tHi / bLo; // max treatment / min baseline
+                    } else {
+                        // For latency: speedup = baseline / treatment
+                        minSpeedup = bLo / tHi; // min baseline / max treatment
+                        maxSpeedup = bHi / tLo; // max baseline / min treatment
+                    }
+                    
+                    return {
+                        minus: Math.max(0, d.speedup - minSpeedup),
+                        plus:  Math.max(0, maxSpeedup - d.speedup)
+                    };
+                }
+                
+                // Fallback to using score errors if confidence intervals not available
+                const be = d.baseline_error;
+                const te = d.treatment_error;
+                
+                if (be > 0 && te > 0 && d.baseline_score > 0 && d.treatment_score > 0) {
+                    // Approximate error propagation for speedup calculation
+                    const relativeError = Math.sqrt(
+                        Math.pow(te / d.treatment_score, 2) + 
+                        Math.pow(be / d.baseline_score, 2)
+                    );
+                    const speedupError = d.speedup * relativeError;
+                    
+                    return { minus: speedupError, plus: speedupError };
+                }
+                
+                return { minus: 0, plus: 0 };
+            });
+            
+            // Define custom plugin to draw error bars (register at top-level, not options.plugins)
+            const errorBarsPlugin = {
+                id: 'errorBars',
+                afterDatasetsDraw(chart) {
+                    const ctx = chart.ctx;
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta || !meta.data) return;
+                    
+                    const yScale = chart.scales.y;
+                    ctx.save();
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 1.5;
+                    ctx.fillStyle = '#000';
+                    
+                    meta.data.forEach((bar, index) => {
+                        const eb = errorBars[index];
+                        if (!eb || (eb.minus <= 0 && eb.plus <= 0)) return;
+                        
+                        const x = bar.x;
+                        const v = speedups[index];
+                        const yMin = yScale.getPixelForValue(Math.max(0, v - eb.minus));
+                        const yMax = yScale.getPixelForValue(v + eb.plus);
+                        const yCtr = yScale.getPixelForValue(v);
+                        
+                        // vertical line
+                        ctx.beginPath();
+                        ctx.moveTo(x, yMin);
+                        ctx.lineTo(x, yMax);
+                        ctx.stroke();
+                        
+                        // caps
+                        ctx.beginPath();
+                        ctx.moveTo(x - 8, yMin); ctx.lineTo(x + 8, yMin);
+                        ctx.moveTo(x - 8, yMax); ctx.lineTo(x + 8, yMax);
+                        ctx.stroke();
+                        
+                        // center point
+                        ctx.beginPath();
+                        ctx.arc(x, yCtr, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    
+                    ctx.restore();
+                }
+            };
+            
+            // Create the chart with plugin properly registered
+            window.benchmarkChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Speedup Factor',
+                        data: speedups,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                plugins: [errorBarsPlugin],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Speedup Factor (x)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Benchmarks'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Benchmark Performance Speedup (with Confidence Intervals)'
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const index = context.dataIndex;
+                                    const d = filteredData[index];
+                                    const eb = errorBars[index];
+                                    
+                                    const lines = [
+                                        `Mode: ${d.mode}`,
+                                        `Unit: ${d.unit}`,
+                                        `Improvement: ${d.improvement_percent.toFixed(2)}%`,
+                                        `Status: ${d.status}`
+                                    ];
+                                    
+                                    if (eb.minus > 0 || eb.plus > 0) {
+                                        lines.push(`Confidence: ${(d.speedup - eb.minus).toFixed(2)}x – ${(d.speedup + eb.plus).toFixed(2)}x`);
+                                    }
+                                    
+                                    return lines;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function showSvgBarChart() {
+            const chartContainer = document.querySelector('#chartModal .modal-content > div');
+            
+            // Clear existing content
+            chartContainer.innerHTML = '<h3 style="text-align: center; margin-bottom: 20px;">Benchmark Performance Speedup (with Confidence Intervals)</h3>';
+            
+            // Calculate chart dimensions
+            const width = 800;
+            const height = 400;
+            const margin = { top: 20, right: 30, bottom: 80, left: 60 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+            
+            // Prepare data
+            const data = filteredData.map((d, index) => {
+                const baselineConf = d.baseline_details.score_confidence || [];
+                const treatmentConf = d.treatment_details.score_confidence || [];
+                
+                let errorBar = { minus: 0, plus: 0 };
+                
+                if (baselineConf.length === 2 && treatmentConf.length === 2) {
+                    const EPS = 1e-12;
+                    const bLo = Math.max(baselineConf[0], EPS);
+                    const bHi = Math.max(baselineConf[1], EPS);
+                    const tLo = Math.max(treatmentConf[0], EPS);
+                    const tHi = Math.max(treatmentConf[1], EPS);
+                    
+                    let minSpeedup, maxSpeedup;
+                    if (d.higher_is_better) {
+                        minSpeedup = tLo / bHi;
+                        maxSpeedup = tHi / bLo;
+                    } else {
+                        minSpeedup = bLo / tHi;
+                        maxSpeedup = bHi / tLo;
+                    }
+                    
+                    errorBar = {
+                        minus: Math.max(0, d.speedup - minSpeedup),
+                        plus: Math.max(0, maxSpeedup - d.speedup)
+                    };
+                }
+                
+                return {
+                    label: d.display_name || d.benchmark,
+                    speedup: d.speedup,
+                    color: d.status === 'improved' ? '#0066cc' : d.status === 'regressed' ? '#ff6600' : '#6c757d',
+                    errorBar: errorBar,
+                    data: d
+                };
+            });
+            
+            // Calculate scales
+            const maxSpeedup = Math.max(...data.map(d => d.speedup + d.errorBar.plus));
+            const minSpeedup = Math.min(0, ...data.map(d => d.speedup - d.errorBar.minus));
+            const yScale = (height - margin.top - margin.bottom) / (maxSpeedup - minSpeedup);
+            const barWidth = (width - margin.left - margin.right) / data.length * 0.8;
+            const barSpacing = (width - margin.left - margin.right) / data.length;
+            
+            // Create SVG
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.style.border = '1px solid #ddd';
+            svg.style.backgroundColor = 'white';
+            
+            // Draw Y-axis
+            const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            yAxis.setAttribute('x1', margin.left);
+            yAxis.setAttribute('y1', margin.top);
+            yAxis.setAttribute('x2', margin.left);
+            yAxis.setAttribute('y2', height - margin.bottom);
+            yAxis.setAttribute('stroke', '#333');
+            yAxis.setAttribute('stroke-width', '1');
+            svg.appendChild(yAxis);
+            
+            // Draw X-axis
+            const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            xAxis.setAttribute('x1', margin.left);
+            xAxis.setAttribute('y1', height - margin.bottom);
+            xAxis.setAttribute('x2', width - margin.right);
+            xAxis.setAttribute('y2', height - margin.bottom);
+            xAxis.setAttribute('stroke', '#333');
+            xAxis.setAttribute('stroke-width', '1');
+            svg.appendChild(xAxis);
+            
+            // Draw Y-axis labels and grid lines
+            const yTicks = 5;
+            for (let i = 0; i <= yTicks; i++) {
+                const value = minSpeedup + (maxSpeedup - minSpeedup) * i / yTicks;
+                const y = height - margin.bottom - (value - minSpeedup) * yScale;
+                
+                // Grid line
+                const gridLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                gridLine.setAttribute('x1', margin.left);
+                gridLine.setAttribute('y1', y);
+                gridLine.setAttribute('x2', width - margin.right);
+                gridLine.setAttribute('y2', y);
+                gridLine.setAttribute('stroke', '#eee');
+                gridLine.setAttribute('stroke-width', '1');
+                svg.appendChild(gridLine);
+                
+                // Label
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', margin.left - 10);
+                label.setAttribute('y', y + 4);
+                label.setAttribute('text-anchor', 'end');
+                label.setAttribute('font-size', '12');
+                label.setAttribute('fill', '#666');
+                label.textContent = value.toFixed(1) + 'x';
+                svg.appendChild(label);
+            }
+            
+            // Draw bars and error bars
+            data.forEach((d, index) => {
+                const chartHeight = height - margin.top - margin.bottom;
+                const x = margin.left + index * barSpacing + (barSpacing - barWidth) / 2;
+                const barHeight = (d.speedup - minSpeedup) * yScale;
+                const y = height - margin.bottom - barHeight;
+                
+                // Draw bar
+                const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                bar.setAttribute('x', x);
+                bar.setAttribute('y', y);
+                bar.setAttribute('width', barWidth);
+                bar.setAttribute('height', barHeight);
+                bar.setAttribute('fill', d.color);
+                bar.setAttribute('stroke', d.color);
+                bar.setAttribute('stroke-width', '1');
+                svg.appendChild(bar);
+                
+                // Draw error bars if available
+                if (d.errorBar.minus > 0 || d.errorBar.plus > 0) {
+                    const centerX = x + barWidth / 2;
+                    const minY = height - margin.bottom - (d.speedup - d.errorBar.minus - minSpeedup) * yScale;
+                    const maxY = height - margin.bottom - (d.speedup + d.errorBar.plus - minSpeedup) * yScale;
+                    const centerY = height - margin.bottom - (d.speedup - minSpeedup) * yScale;
+                    
+                    // Vertical line
+                    const errorLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    errorLine.setAttribute('x1', centerX);
+                    errorLine.setAttribute('y1', minY);
+                    errorLine.setAttribute('x2', centerX);
+                    errorLine.setAttribute('y2', maxY);
+                    errorLine.setAttribute('stroke', '#000');
+                    errorLine.setAttribute('stroke-width', '2');
+                    svg.appendChild(errorLine);
+                    
+                    // Top cap
+                    const topCap = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    topCap.setAttribute('x1', centerX - 8);
+                    topCap.setAttribute('y1', maxY);
+                    topCap.setAttribute('x2', centerX + 8);
+                    topCap.setAttribute('y2', maxY);
+                    topCap.setAttribute('stroke', '#000');
+                    topCap.setAttribute('stroke-width', '2');
+                    svg.appendChild(topCap);
+                    
+                    // Bottom cap
+                    const bottomCap = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    bottomCap.setAttribute('x1', centerX - 8);
+                    bottomCap.setAttribute('y1', minY);
+                    bottomCap.setAttribute('x2', centerX + 8);
+                    bottomCap.setAttribute('y2', minY);
+                    bottomCap.setAttribute('stroke', '#000');
+                    bottomCap.setAttribute('stroke-width', '2');
+                    svg.appendChild(bottomCap);
+                    
+                    // Center point
+                    const centerPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    centerPoint.setAttribute('cx', centerX);
+                    centerPoint.setAttribute('cy', centerY);
+                    centerPoint.setAttribute('r', '3');
+                    centerPoint.setAttribute('fill', '#000');
+                    svg.appendChild(centerPoint);
+                }
+                
+                // X-axis label
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', x + barWidth / 2);
+                label.setAttribute('y', height - margin.bottom + 15);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '10');
+                label.setAttribute('fill', '#666');
+                label.textContent = d.label.length > 15 ? d.label.substring(0, 12) + '...' : d.label;
+                svg.appendChild(label);
+            });
+            
+            // Add Y-axis title
+            const yTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            yTitle.setAttribute('x', 20);
+            yTitle.setAttribute('y', height / 2);
+            yTitle.setAttribute('text-anchor', 'middle');
+            yTitle.setAttribute('font-size', '12');
+            yTitle.setAttribute('fill', '#333');
+            yTitle.setAttribute('transform', `rotate(-90, 20, ${height / 2})`);
+            yTitle.textContent = 'Speedup Factor (x)';
+            svg.appendChild(yTitle);
+            
+            chartContainer.appendChild(svg);
+            
+            // Add legend
+            const legend = document.createElement('div');
+            legend.style.textAlign = 'center';
+            legend.style.marginTop = '10px';
+            legend.style.fontSize = '12px';
+            legend.innerHTML = `
+                <span style="color: #0066cc;">■ Improved</span> &nbsp;&nbsp;
+                <span style="color: #ff6600;">■ Regressed</span> &nbsp;&nbsp;
+                <span style="color: #6c757d;">■ Unchanged</span> &nbsp;&nbsp;
+                <span style="color: #000;">| Error bars show confidence intervals</span>
+            `;
+            chartContainer.appendChild(legend);
+        }
+        
+        function closeChartModal() {
+            document.getElementById('chartModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const detailModal = document.getElementById('detailModal');
+            const chartModal = document.getElementById('chartModal');
+            const experimentModal = document.getElementById('experimentModal');
+            if (event.target === detailModal) {
+                closeModal();
+            }
+            if (event.target === chartModal) {
+                closeChartModal();
+            }
+            if (event.target === experimentModal) {
+                closeExperimentModal();
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeChartModal();
+                closeExperimentModal();
+            }
+        });
+        
+        // Initialize
+        updateFilteredStats();
+        updateTable();
+    </script>
+</body>
+</html>
